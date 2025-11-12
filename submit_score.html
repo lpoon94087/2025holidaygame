@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <body>
+    <h3>Submit Score</h3>
+    <input id="name" placeholder="Name">
+    <input id="score" placeholder="Score">
+    <button id="send">Send</button>
+
+    <script>
+      const FORM_URL =
+        "https://docs.google.com/forms/d/1e9lTWePVGF-nas4dTfo2AtjiGibtFRmBc7JxyzWjnnk/formResponse";
+      const NAME_FIELD = "entry.1954419010";   // your Name question ID
+      const SCORE_FIELD = "entry.951130346";  // your Score question ID
+
+      document.getElementById("send").addEventListener("click", () => {
+        const data = new URLSearchParams();
+        data.append(NAME_FIELD, document.getElementById("name").value);
+        data.append(SCORE_FIELD, document.getElementById("score").value);
+
+        // no-cors mode lets it post publicly without CORS errors
+        fetch(FORM_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: data
+        });
+
+        alert("Submitted! Check your Google Sheet.");
+      });
+    </script>
+  </body>
+</html>
+
