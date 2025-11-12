@@ -38,6 +38,52 @@
         
         .header p {
             color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .direction-toggle {
+            display: inline-flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .direction-button {
+            padding: 10px 20px;
+            border: 2px solid #2196f3;
+            background: white;
+            color: #2196f3;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .direction-button:hover {
+            background: #e3f2fd;
+        }
+        
+        .direction-button.active {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .clear-button {
+            padding: 8px 16px;
+            border: 2px solid #f44336;
+            background: white;
+            color: #f44336;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-left: 20px;
+        }
+        
+        .clear-button:hover {
+            background: #f44336;
+            color: white;
         }
         
         .puzzle-container {
@@ -77,6 +123,10 @@
         
         .cell:not(.black):hover {
             background: #e3f2fd;
+        }
+        
+        .cell.highlighted {
+            background: #bbdefb !important;
         }
         
         .cell.selected {
@@ -142,6 +192,18 @@
         
         .clue-item:hover {
             background: #f5f5f5;
+        }
+        
+        .clue-item.active {
+            background: #fff59d;
+            border-left: 4px solid #2196f3;
+            padding-left: 4px;
+        }
+        
+        .clue-item.highlighted {
+            background: #e3f2fd;
+            border-left: 4px solid #90caf9;
+            padding-left: 4px;
         }
         
         .clue-number {
@@ -234,6 +296,11 @@
         <div class="header">
             <h1>ULP HOLIDAY CRYPTICS</h1>
             <p>By Laurie Poon</p>
+            <div class="direction-toggle">
+                <button class="direction-button active" id="across-btn" onclick="setDirection('across')">ACROSS</button>
+                <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
+                <button class="clear-button" onclick="clearProgress()">Clear All</button>
+            </div>
         </div>
         
         <div class="puzzle-container">
@@ -284,7 +351,7 @@
             [ 'B',  '',  'B', 'B', 'B', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B'],
             [ 'B','27',   '',  '','28', 'B',  '', 'B','29',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B', 'B'],
             [ 'B',  '',  'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B', 'B','30', 'B','31'],
-            [ 'B',  '',  'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B','32',  '',  '',  '', '33',  '',  '',  '',  ''],
+            [ 'B',  '',  'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B','32',  '',  '',  '','33',  '',  '',  '',  ''],
             [ 'B', 'B', '34', 'B',  '', 'B', '',  'B', 'B','35',  '',  '',  '',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  ''],
             [ 'B', 'B',   '', 'B',  '', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B'],
             [ 'B', 'B', '36',  '',  '',  '','37',  '', 'B',  '', 'B', 'B','38',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B','39',  '',  '',  '',  '',  ''],
@@ -304,14 +371,14 @@
                 { num: 5, text: "IMAGE11" },
                 { num: 6, text: "Game played by Adri Nov 30, 2017" },
                 { num: 9, text: "IMAGE5" },
-                { num: 12, text: "Number of words in iconic soliloquy from Hamlet, Act III, Scene I." },
+                { num: 12, text: "Number of words in iconic soliloquy from Hamlet, Act III, Scene I. (Minus 1)" },
                 { num: 14, text: "IMAGE41" },
                 { num: 17, text: "IMAGE3" },
                 { num: 19, text: "IMAGE45" },
                 { num: 22, text: "IMAGE44" },
                 { num: 26, text: "IMAGE4" },
                 { num: 27, text: "Title for Twitter admin" },
-                { num: 29, text: "Comics with \"imaginary\" friend (SEE IMAGE21)" },
+                { num: 29, text: "Comics with \"imaginary\" friend IMAGE21" },
                 { num: 32, text: "IMAGE39" },
                 { num: 35, text: "IMAGE20" },
                 { num: 36, text: "IMAGE6" },
@@ -319,25 +386,25 @@
                 { num: 39, text: "IMAGE17" },
                 { num: 41, text: "IMAGE7" },
                 { num: 42, text: "IMAGE10" },
-                { num: 43, text: "Largest creature, real or fictional (SEE IMAGE21)" },
+                { num: 43, text: "Largest creature, real or fictional IMAGE21" },
                 { num: 44, text: "IMAGE46" },
                 { num: 46, text: "IMAGE40" },
                 { num: 47, text: "IMAGE16" },
-                { num: 48, text: "Five clues in this puzzles" },
-                { num: 49, text: "Two Japanese Gods (SEE IMAGE21)" }
+                { num: 48, text: "Five clues in this puzzle" },
+                { num: 49, text: "Two Japanese Gods IMAGE21" }
             ],
             down: [
                 { num: 2, text: "IMAGE8" },
                 { num: 3, text: "IMAGE38" },
                 { num: 4, text: "Posted by gam13it on Jan 8, 2019" },
-                { num: 7, text: "Most expensive (SEE IMAGE21)" },
+                { num: 7, text: "Most expensive pin IMAGE21" },
                 { num: 8, text: "「煙塵」 to sayer of \"I draw my sail\"" },
                 { num: 10, text: "IMAGE14" },
                 { num: 11, text: "IMAGE9" },
-                { num: 13, text: "90s Sitcom (SEE IMAGE21)" },
+                { num: 13, text: "90s Sitcom IMAGE21" },
                 { num: 15, text: "Craving in male child" },
                 { num: 16, text: "IMAGE19" },
-                { num: 18, text: "Classic horror movie (SEE IMAGE21)" },
+                { num: 18, text: "Classic horror movie IMAGE21" },
                 { num: 20, text: "IMAGE47" },
                 { num: 21, text: "SKCAT" },
                 { num: 23, text: "IMAGE12" },
@@ -347,7 +414,7 @@
                 { num: 30, text: "IMAGE15" },
                 { num: 31, text: "IMAGE18" },
                 { num: 33, text: "IMAGE42" },
-                { num: 34, text: "IMAGE37" },
+                { num: 34, text: "Ad campaign for this company IMAGE37" },
                 { num: 37, text: "The 15th letter of the Greek alphabet is stupid" },
                 { num: 40, text: "Words said at 2:48:23 in LOTR: The Return of the King" },
                 { num: 42, text: "Ran with Max on Aug 16, 2025" },
@@ -358,9 +425,13 @@
         let currentCell = null;
         let direction = 'across';
         const grid = [];
+        const STORAGE_KEY = 'crossword_progress';
 
         function initGrid() {
             const gridElement = document.getElementById('crossword-grid');
+            
+            // Load saved progress
+            const savedProgress = loadProgress();
             
             for (let row = 0; row < 28; row++) {
                 grid[row] = [];
@@ -377,7 +448,8 @@
                         grid[row][col] = { isBlack: true, value: '', number: null };
                     } else {
                         const number = cellData !== '' ? cellData : null;
-                        grid[row][col] = { isBlack: false, value: '', number: number };
+                        const savedValue = savedProgress && savedProgress[row] && savedProgress[row][col] ? savedProgress[row][col] : '';
+                        grid[row][col] = { isBlack: false, value: savedValue, number: number };
                         
                         if (number) {
                             const numSpan = document.createElement('span');
@@ -388,6 +460,7 @@
                         
                         const letterDiv = document.createElement('div');
                         letterDiv.className = 'cell-letter';
+                        letterDiv.textContent = savedValue;
                         cell.appendChild(letterDiv);
                         
                         cell.addEventListener('click', () => handleCellClick(row, col));
@@ -405,6 +478,7 @@
             
             if (currentCell && currentCell.row === row && currentCell.col === col) {
                 direction = direction === 'across' ? 'down' : 'across';
+                updateDirectionButtons();
             } else {
                 currentCell = { row, col };
             }
@@ -418,15 +492,25 @@
             
             const key = e.key.toUpperCase();
             
+            if (key === ' ' || key === 'SPACEBAR') {
+                direction = direction === 'across' ? 'down' : 'across';
+                updateDirectionButtons();
+                updateSelection();
+                e.preventDefault();
+                return;
+            }
+            
             if (/^[A-Z]$/.test(key)) {
                 grid[row][col].value = key;
                 updateCellDisplay(row, col);
+                saveProgress();
                 
                 moveToNextCell(row, col);
                 e.preventDefault();
             } else if (key === 'BACKSPACE') {
                 grid[row][col].value = '';
                 updateCellDisplay(row, col);
+                saveProgress();
                 moveToPrevCell(row, col);
                 e.preventDefault();
             } else if (key === 'ARROWLEFT' || key === 'ARROWRIGHT' || key === 'ARROWUP' || key === 'ARROWDOWN') {
@@ -496,13 +580,124 @@
 
         function updateSelection() {
             document.querySelectorAll('.cell').forEach(cell => {
-                cell.classList.remove('selected');
+                cell.classList.remove('selected', 'highlighted');
+            });
+            
+            document.querySelectorAll('.clue-item').forEach(clue => {
+                clue.classList.remove('active', 'highlighted');
             });
             
             if (currentCell) {
                 const cell = document.querySelector(`[data-row="${currentCell.row}"][data-col="${currentCell.col}"]`);
                 if (cell) cell.classList.add('selected');
+                
+                // Highlight the entire word
+                highlightWord(currentCell.row, currentCell.col);
+                
+                // Highlight the clues
+                highlightClues(currentCell.row, currentCell.col);
             }
+        }
+        
+        function highlightClues(row, col) {
+            // Find clue numbers for across and down at this position
+            const acrossClueNum = findClueNumber(row, col, 'across');
+            const downClueNum = findClueNumber(row, col, 'down');
+            
+            // Highlight the active clue (based on current direction)
+            if (direction === 'across' && acrossClueNum) {
+                const clueItem = document.querySelector(`#across-clues .clue-item[data-clue-num="${acrossClueNum}"]`);
+                if (clueItem) {
+                    clueItem.classList.add('active');
+                    clueItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            if (direction === 'down' && downClueNum) {
+                const clueItem = document.querySelector(`#down-clues .clue-item[data-clue-num="${downClueNum}"]`);
+                if (clueItem) {
+                    clueItem.classList.add('active');
+                    clueItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            // Highlight the secondary clue (the other direction)
+            if (direction === 'across' && downClueNum) {
+                const clueItem = document.querySelector(`#down-clues .clue-item[data-clue-num="${downClueNum}"]`);
+                if (clueItem) clueItem.classList.add('highlighted');
+            }
+            
+            if (direction === 'down' && acrossClueNum) {
+                const clueItem = document.querySelector(`#across-clues .clue-item[data-clue-num="${acrossClueNum}"]`);
+                if (clueItem) clueItem.classList.add('highlighted');
+            }
+        }
+        
+        function findClueNumber(row, col, dir) {
+            if (dir === 'across') {
+                // Find start of across word
+                let startCol = col;
+                while (startCol > 0 && !grid[row][startCol - 1].isBlack) {
+                    startCol--;
+                }
+                // Return the clue number at the start of this word
+                return grid[row][startCol].number;
+            } else {
+                // Find start of down word
+                let startRow = row;
+                while (startRow > 0 && !grid[startRow - 1][col].isBlack) {
+                    startRow--;
+                }
+                // Return the clue number at the start of this word
+                return grid[startRow][col].number;
+            }
+        }
+        
+        function highlightWord(row, col) {
+            if (direction === 'across') {
+                // Find start of word
+                let startCol = col;
+                while (startCol > 0 && !grid[row][startCol - 1].isBlack) {
+                    startCol--;
+                }
+                
+                // Highlight from start to end
+                let c = startCol;
+                while (c < 28 && !grid[row][c].isBlack) {
+                    if (c !== col) { // Don't double-highlight selected cell
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${c}"]`);
+                        if (cell) cell.classList.add('highlighted');
+                    }
+                    c++;
+                }
+            } else {
+                // Find start of word
+                let startRow = row;
+                while (startRow > 0 && !grid[startRow - 1][col].isBlack) {
+                    startRow--;
+                }
+                
+                // Highlight from start to end
+                let r = startRow;
+                while (r < 28 && !grid[r][col].isBlack) {
+                    if (r !== row) { // Don't double-highlight selected cell
+                        const cell = document.querySelector(`[data-row="${r}"][data-col="${col}"]`);
+                        if (cell) cell.classList.add('highlighted');
+                    }
+                    r++;
+                }
+            }
+        }
+        
+        function setDirection(newDirection) {
+            direction = newDirection;
+            updateDirectionButtons();
+            updateSelection();
+        }
+        
+        function updateDirectionButtons() {
+            document.getElementById('across-btn').classList.toggle('active', direction === 'across');
+            document.getElementById('down-btn').classList.toggle('active', direction === 'down');
         }
 
         function focusCell(row, col) {
@@ -534,6 +729,7 @@
         function createClueElement(clue) {
             const div = document.createElement('div');
             div.className = 'clue-item';
+            div.dataset.clueNum = clue.num;
             
             const numSpan = document.createElement('span');
             numSpan.className = 'clue-number';
@@ -542,11 +738,25 @@
             
             const imageMatch = clue.text.match(/IMAGE(\d+)/);
             if (imageMatch) {
+                // Extract text before and after IMAGE tag
+                const beforeImage = clue.text.substring(0, clue.text.indexOf('IMAGE'));
+                const afterImage = clue.text.substring(clue.text.indexOf('IMAGE') + imageMatch[0].length);
+                const fullText = (beforeImage + afterImage).trim();
+                
+                const contentSpan = document.createElement('span');
+                
+                if (fullText) {
+                    // If there's text, show it first
+                    contentSpan.textContent = fullText + ' ';
+                }
+                
                 const button = document.createElement('button');
                 button.className = 'image-button';
-                button.textContent = `📷 View Image ${imageMatch[1]}`;
+                button.textContent = `📷 ${imageMatch[1]}`;
                 button.onclick = () => openImageModal(imageMatch[1]);
-                div.appendChild(button);
+                
+                contentSpan.appendChild(button);
+                div.appendChild(contentSpan);
             } else {
                 const textSpan = document.createElement('span');
                 textSpan.textContent = clue.text;
@@ -576,6 +786,34 @@
         function closeModal() {
             const modal = document.getElementById('image-modal');
             modal.classList.remove('active');
+        }
+        
+        function saveProgress() {
+            const progress = [];
+            for (let row = 0; row < 28; row++) {
+                progress[row] = [];
+                for (let col = 0; col < 28; col++) {
+                    progress[row][col] = grid[row][col].value;
+                }
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+        
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                console.error('Error loading saved progress:', e);
+                return null;
+            }
+        }
+        
+        function clearProgress() {
+            if (confirm('Are you sure you want to clear all progress?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
         }
 
         // Close modal when clicking outside
