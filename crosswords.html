@@ -85,7 +85,24 @@
             background: #f44336;
             color: white;
         }
+
+        .name-button {
+            padding: 8px 16px;
+            border: 2px solid #4caf50;
+            background: white;
+            color: #4caf50;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-left: 20px;
+        }
         
+        .name-button:hover {
+            background: #4caf50;
+            color: white;
+        }
         .puzzle-container {
             display: flex;
             gap: 20px;
@@ -298,6 +315,7 @@
             <div class="direction-toggle">
                 <button class="direction-button active" id="across-btn" onclick="setDirection('across')">ACROSS</button>
                 <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
+                <button class="name-button" id="name-btn" onclick="changeName()">Player</button>
                 <button class="clear-button" onclick="clearProgress()">Clear All</button>
             </div>
         </div>
@@ -425,6 +443,8 @@
         let direction = 'across';
         const grid = [];
         const STORAGE_KEY = 'crossword_progress';
+        const NAME_STORAGE_KEY = 'crossword_player_name';
+        let playerName = '';
 
         function initGrid() {
             const gridElement = document.getElementById('crossword-grid');
@@ -814,7 +834,54 @@
                 location.reload();
             }
         }
-
+        function loadPlayerName() {
+            try {
+                const saved = localStorage.getItem(NAME_STORAGE_KEY);
+                return saved || null;
+            } catch (e) {
+                console.error('Error loading player name:', e);
+                return null;
+            }
+        }
+        
+        function savePlayerName(name) {
+            localStorage.setItem(NAME_STORAGE_KEY, name);
+            playerName = name;
+            updateNameButton();
+        }
+        
+        function updateNameButton() {
+            const nameBtn = document.getElementById('name-btn');
+            if (nameBtn) {
+                nameBtn.textContent = playerName || 'Player';
+            }
+        }
+        
+        function promptForName() {
+            let name = prompt('Welcome! Please enter your name:', '');
+            if (name && name.trim()) {
+                savePlayerName(name.trim());
+            } else if (name !== null) {
+                // User clicked OK but didn't enter a name, try again
+                promptForName();
+            }
+        }
+        
+        function changeName() {
+            let name = prompt('Enter your name:', playerName);
+            if (name && name.trim()) {
+                savePlayerName(name.trim());
+            }
+        }
+        
+        function initPlayerName() {
+            playerName = loadPlayerName();
+            if (!playerName) {
+                promptForName();
+            }
+            updateNameButton();
+        }
+    
         // Close modal when clicking outside
         document.getElementById('image-modal').addEventListener('click', function(e) {
             if (e.target === this) {
@@ -823,6 +890,7 @@
         });
 
         // Initialize
+        initPlayerName();
         initGrid();
         renderClues();
     </script>
