@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULP Holiday Cryptics - Interactive Crossword</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+        }
+        
+        .puzzle-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .grid-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+        
+        .crossword-grid {
+            display: grid;
+            grid-template-columns: repeat(28, 28px);
+            border: 4px solid black;
+            gap: 0;
+        }
+        
+        .cell {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #999;
+            position: relative;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .cell.black {
+            background: black;
+            cursor: default;
+        }
+        
+        .cell:not(.black):hover {
+            background: #e3f2fd;
+        }
+        
+        .cell.selected {
+            background: #fff59d !important;
+            outline: 2px solid #2196f3;
+            outline-offset: -2px;
+        }
+        
+        .cell-number {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 8px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .cell-letter {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .clues-container {
+            flex: 1;
+            min-width: 300px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .clue-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .clue-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .clue-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .clue-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .clue-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .clue-number {
+            font-weight: bold;
+            min-width: 30px;
+        }
+        
+        .image-button {
+            background: none;
+            border: none;
+            color: #2196f3;
+            cursor: pointer;
+            text-decoration: underline;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            padding: 0;
+        }
+        
+        .image-button:hover {
+            color: #1976d2;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.5em;
+        }
+        
+        .close-button {
+            background: #f5f5f5;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .modal-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ULP HOLIDAY CRYPTICS</h1>
+            <p>By Laurie Poon</p>
+        </div>
+        
+        <div class="puzzle-container">
+            <div class="grid-container">
+                <div class="crossword-grid" id="crossword-grid"></div>
+            </div>
+            
+            <div class="clues-container">
+                <div class="clue-section">
+                    <h2>ACROSS</h2>
+                    <div class="clue-list" id="across-clues"></div>
+                </div>
+                
+                <div class="clue-section">
+                    <h2>DOWN</h2>
+                    <div class="clue-list" id="down-clues"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="image-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Image</h3>
+                <button class="close-button" onclick="closeModal()">×</button>
+            </div>
+            <img id="modal-image" src="" alt="Clue Image">
+        </div>
+    </div>
+
+    <script>
+        // Grid structure - B represents black squares, numbers represent clue numbers
+        const gridStructure = [
+            [ '1',  '2',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B', 'B', '3', 'B', 'B'],
+            [ 'B',   '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', '4', 'B', 'B',  '', 'B', 'B'],
+            [ '5',   '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', '6',  '',  '',  '',  '',  '', '7'],
+            [ 'B',   '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', '8', 'B',  '', 'B', 'B',  '', 'B',  ''],
+            [ 'B',  '9',  '','10',  '',  '',  '',  '',  '','11',  '',  '',  '',  '',  '',  '',  '',  '', 'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B',  ''],
+            [ 'B',   '', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B',  ''],
+            [ 'B',   '', 'B','12',  '',  '',  '',  '',  '',  '', '', '13',  '',  '',  '', 'B', 'B','14',  '',  '',  '',  '',  '',  '','15', 'B', 'B',  ''],
+            [ 'B',   '', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B', 'B',  ''],
+            [ 'B',   '', 'B',  '', 'B','16', 'B', 'B', 'B',  '', 'B','17',  '','18',  '',  '',  '',  '',  '',  '',  '', 'B',  '', 'B',  '', 'B', 'B',  ''],
+            [ 'B', '19',  '',  '',  '',  '',  '',  '',  '',  '', 'B',  '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B', 'B',  ''],
+            [ 'B',  '',  'B',  '', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B','20', 'B', 'B', 'B', 'B', 'B','21', 'B', 'B',  '', 'B', 'B', 'B'],
+            ['22',  '',   '',  '',  '',  '','23',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B','24', 'B','25', 'B','26',  '',  '',  '', '',  'B', 'B'],
+            [ 'B',  '',  'B',  '', 'B', 'B',  '', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B'],
+            [ 'B',  '',  'B', 'B', 'B', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B'],
+            [ 'B','27',   '',  '','28', 'B',  '', 'B','29',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B', 'B'],
+            [ 'B',  '',  'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B', 'B','30', 'B','31'],
+            [ 'B',  '',  'B', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B','32',  '',  '',  '', '33',  '',  '',  '',  ''],
+            [ 'B', 'B', '34', 'B',  '', 'B', '',  'B', 'B','35',  '',  '',  '',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  ''],
+            [ 'B', 'B',   '', 'B',  '', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B',  '', 'B', 'B'],
+            [ 'B', 'B', '36',  '',  '',  '','37',  '', 'B',  '', 'B', 'B','38',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B','39',  '',  '',  '',  '',  ''],
+            [ 'B', 'B',   '', 'B',  '', 'B',  '', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B','40', 'B',  '', 'B',  '', 'B', 'B'],
+            ['41',  '',   '',  '',  '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B','42',  '',  '',  '',  '',  '',  '',  '',  '', 'B',  '', 'B', 'B'],
+            [ 'B', 'B',   '', 'B', 'B', 'B',  '', 'B','43',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B', 'B'],
+            [ 'B','44',   '', '', '45',  '',  '',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B',  '', 'B',  '', 'B', 'B'],
+            [ 'B', 'B',   '', 'B',  '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B',  '', 'B','46',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B'],
+            [ 'B', 'B',   '', 'B',  '', 'B','47',  '',  '',  '',  '',  '', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B'],
+            [ 'B', 'B',   '', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B',  '', 'B','48',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B'],
+            [ 'B', 'B',  'B', 'B','49',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B',  '', 'B', 'B', 'B', 'B', 'B', 'B']
+        ];
+
+        const clues = {
+            across: [
+                { num: 1, text: "IMAGE13" },
+                { num: 5, text: "IMAGE11" },
+                { num: 6, text: "Game played by Adri Nov 30, 2017" },
+                { num: 9, text: "IMAGE5" },
+                { num: 12, text: "Number of words in iconic soliloquy from Hamlet, Act III, Scene I." },
+                { num: 14, text: "IMAGE41" },
+                { num: 17, text: "IMAGE3" },
+                { num: 19, text: "IMAGE45" },
+                { num: 22, text: "IMAGE44" },
+                { num: 26, text: "IMAGE4" },
+                { num: 27, text: "Title for Twitter admin" },
+                { num: 29, text: "Comics with \"imaginary\" friend (SEE IMAGE21)" },
+                { num: 32, text: "IMAGE39" },
+                { num: 35, text: "IMAGE20" },
+                { num: 36, text: "IMAGE6" },
+                { num: 38, text: "IMAGE43" },
+                { num: 39, text: "IMAGE17" },
+                { num: 41, text: "IMAGE7" },
+                { num: 42, text: "IMAGE10" },
+                { num: 43, text: "Largest creature, real or fictional (SEE IMAGE21)" },
+                { num: 44, text: "IMAGE46" },
+                { num: 46, text: "IMAGE40" },
+                { num: 47, text: "IMAGE16" },
+                { num: 48, text: "Five clues in this puzzles" },
+                { num: 49, text: "Two Japanese Gods (SEE IMAGE21)" }
+            ],
+            down: [
+                { num: 2, text: "IMAGE8" },
+                { num: 3, text: "IMAGE38" },
+                { num: 4, text: "Posted by gam13it on Jan 8, 2019" },
+                { num: 7, text: "Most expensive (SEE IMAGE21)" },
+                { num: 8, text: "「煙塵」 to sayer of \"I draw my sail\"" },
+                { num: 10, text: "IMAGE14" },
+                { num: 11, text: "IMAGE9" },
+                { num: 13, text: "90s Sitcom (SEE IMAGE21)" },
+                { num: 15, text: "Craving in male child" },
+                { num: 16, text: "IMAGE19" },
+                { num: 18, text: "Classic horror movie (SEE IMAGE21)" },
+                { num: 20, text: "IMAGE47" },
+                { num: 21, text: "SKCAT" },
+                { num: 23, text: "IMAGE12" },
+                { num: 24, text: "See 49 Across" },
+                { num: 25, text: "Kind of warrior" },
+                { num: 28, text: "ॐ in appreciation" },
+                { num: 30, text: "IMAGE15" },
+                { num: 31, text: "IMAGE18" },
+                { num: 33, text: "IMAGE42" },
+                { num: 34, text: "IMAGE37" },
+                { num: 37, text: "The 15th letter of the Greek alphabet is stupid" },
+                { num: 40, text: "Words said at 2:48:23 in LOTR: The Return of the King" },
+                { num: 42, text: "Ran with Max on Aug 16, 2025" },
+                { num: 45, text: "Response from Wordle successfully on fourth guess" }
+            ]
+        };
+
+        let currentCell = null;
+        let direction = 'across';
+        const grid = [];
+
+        function initGrid() {
+            const gridElement = document.getElementById('crossword-grid');
+            
+            for (let row = 0; row < 28; row++) {
+                grid[row] = [];
+                for (let col = 0; col < 28; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    const cellData = gridStructure[row][col];
+                    
+                    if (cellData === 'B') {
+                        cell.classList.add('black');
+                        grid[row][col] = { isBlack: true, value: '', number: null };
+                    } else {
+                        const number = cellData !== '' ? cellData : null;
+                        grid[row][col] = { isBlack: false, value: '', number: number };
+                        
+                        if (number) {
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'cell-number';
+                            numSpan.textContent = number;
+                            cell.appendChild(numSpan);
+                        }
+                        
+                        const letterDiv = document.createElement('div');
+                        letterDiv.className = 'cell-letter';
+                        cell.appendChild(letterDiv);
+                        
+                        cell.addEventListener('click', () => handleCellClick(row, col));
+                        cell.tabIndex = 0;
+                        cell.addEventListener('keydown', (e) => handleKeyDown(e, row, col));
+                    }
+                    
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (grid[row][col].isBlack) return;
+            
+            if (currentCell && currentCell.row === row && currentCell.col === col) {
+                direction = direction === 'across' ? 'down' : 'across';
+            } else {
+                currentCell = { row, col };
+            }
+            
+            updateSelection();
+            focusCell(row, col);
+        }
+
+        function handleKeyDown(e, row, col) {
+            if (grid[row][col].isBlack) return;
+            
+            const key = e.key.toUpperCase();
+            
+            if (/^[A-Z]$/.test(key)) {
+                grid[row][col].value = key;
+                updateCellDisplay(row, col);
+                
+                moveToNextCell(row, col);
+                e.preventDefault();
+            } else if (key === 'BACKSPACE') {
+                grid[row][col].value = '';
+                updateCellDisplay(row, col);
+                moveToPrevCell(row, col);
+                e.preventDefault();
+            } else if (key === 'ARROWLEFT' || key === 'ARROWRIGHT' || key === 'ARROWUP' || key === 'ARROWDOWN') {
+                e.preventDefault();
+                handleArrowKey(key, row, col);
+            }
+        }
+
+        function moveToNextCell(row, col) {
+            if (direction === 'across') {
+                for (let c = col + 1; c < 28; c++) {
+                    if (!grid[row][c].isBlack) {
+                        currentCell = { row, col: c };
+                        updateSelection();
+                        focusCell(row, c);
+                        return;
+                    }
+                }
+            } else {
+                for (let r = row + 1; r < 28; r++) {
+                    if (!grid[r][col].isBlack) {
+                        currentCell = { row: r, col };
+                        updateSelection();
+                        focusCell(r, col);
+                        return;
+                    }
+                }
+            }
+        }
+
+        function moveToPrevCell(row, col) {
+            if (direction === 'across') {
+                for (let c = col - 1; c >= 0; c--) {
+                    if (!grid[row][c].isBlack) {
+                        currentCell = { row, col: c };
+                        updateSelection();
+                        focusCell(row, c);
+                        return;
+                    }
+                }
+            } else {
+                for (let r = row - 1; r >= 0; r--) {
+                    if (!grid[r][col].isBlack) {
+                        currentCell = { row: r, col };
+                        updateSelection();
+                        focusCell(r, col);
+                        return;
+                    }
+                }
+            }
+        }
+
+        function handleArrowKey(key, row, col) {
+            let newRow = row, newCol = col;
+            
+            if (key === 'ARROWLEFT') newCol--;
+            else if (key === 'ARROWRIGHT') newCol++;
+            else if (key === 'ARROWUP') newRow--;
+            else if (key === 'ARROWDOWN') newRow++;
+            
+            if (newRow >= 0 && newRow < 28 && newCol >= 0 && newCol < 28 && !grid[newRow][newCol].isBlack) {
+                currentCell = { row: newRow, col: newCol };
+                updateSelection();
+                focusCell(newRow, newCol);
+            }
+        }
+
+        function updateSelection() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            if (currentCell) {
+                const cell = document.querySelector(`[data-row="${currentCell.row}"][data-col="${currentCell.col}"]`);
+                if (cell) cell.classList.add('selected');
+            }
+        }
+
+        function focusCell(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cell) cell.focus();
+        }
+
+        function updateCellDisplay(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cell) {
+                const letterDiv = cell.querySelector('.cell-letter');
+                if (letterDiv) letterDiv.textContent = grid[row][col].value;
+            }
+        }
+
+        function renderClues() {
+            const acrossContainer = document.getElementById('across-clues');
+            const downContainer = document.getElementById('down-clues');
+            
+            clues.across.forEach(clue => {
+                acrossContainer.appendChild(createClueElement(clue));
+            });
+            
+            clues.down.forEach(clue => {
+                downContainer.appendChild(createClueElement(clue));
+            });
+        }
+
+        function createClueElement(clue) {
+            const div = document.createElement('div');
+            div.className = 'clue-item';
+            
+            const numSpan = document.createElement('span');
+            numSpan.className = 'clue-number';
+            numSpan.textContent = clue.num + '.';
+            div.appendChild(numSpan);
+            
+            const imageMatch = clue.text.match(/IMAGE(\d+)/);
+            if (imageMatch) {
+                const button = document.createElement('button');
+                button.className = 'image-button';
+                button.textContent = `📷 View Image ${imageMatch[1]}`;
+                button.onclick = () => openImageModal(imageMatch[1]);
+                div.appendChild(button);
+            } else {
+                const textSpan = document.createElement('span');
+                textSpan.textContent = clue.text;
+                div.appendChild(textSpan);
+            }
+            
+            return div;
+        }
+
+        function openImageModal(imageNum) {
+            const modal = document.getElementById('image-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalImage = document.getElementById('modal-image');
+            
+            modalTitle.textContent = `Image ${imageNum}`;
+            modalImage.src = `img/image_${imageNum}.jpg`;
+            modalImage.alt = `Clue Image ${imageNum}`;
+            
+            modalImage.onerror = function() {
+                this.onerror = null;
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="400"%3E%3Crect fill="%23f0f0f0" width="600" height="400"/%3E%3Ctext x="50%25" y="45%25" text-anchor="middle" fill="%23999" font-size="24" font-family="sans-serif"%3EImage ' + imageNum + ' not found%3C/text%3E%3Ctext x="50%25" y="55%25" text-anchor="middle" fill="%23666" font-size="16" font-family="sans-serif"%3EPlace image_' + imageNum + '.jpg in the same directory%3C/text%3E%3C/svg%3E';
+            };
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('image-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        initGrid();
+        renderClues();
+    </script>
+</body>
+</html>
