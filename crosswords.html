@@ -904,6 +904,21 @@
         }
 
         async function submitCrossword() {
+            const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
+            const COOLDOWN_HOURS = 1;
+            
+            // Check last submit time
+            const lastSubmitTime = localStorage.getItem(SUBMIT_COOLDOWN_KEY);
+            if (lastSubmitTime) {
+                const timeSinceLastSubmit = Date.now() - parseInt(lastSubmitTime);
+                const hoursElapsed = timeSinceLastSubmit / (1000 * 60 * 60);
+                
+                if (hoursElapsed < COOLDOWN_HOURS) {
+                    const minutesRemaining = Math.ceil((COOLDOWN_HOURS * 60) - (timeSinceLastSubmit / (1000 * 60)));
+                    alert(`Please wait ${minutesRemaining} more minute(s) before submitting again.`);
+                    return;
+                }
+            }
             const FORM_URL = "https://docs.google.com/forms/d/1e9lTWePVGF-nas4dTfo2AtjiGibtFRmBc7JxyzWjnnk/formResponse";
             const NAME_FIELD = "entry.1954419010";   // your Name question ID
             const SCORE_FIELD = "entry.951130346";  // your Score question ID
@@ -925,6 +940,8 @@
             mode: "no-cors",
             body: data
             });
+            // Store current time as last submit time
+            localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
             alert("Thanks for the submission!");
         }
 
