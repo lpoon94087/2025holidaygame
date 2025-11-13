@@ -317,6 +317,7 @@
                 <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
                 <button class="name-button" id="name-btn" onclick="changeName()">Player</button>
                 <button class="clear-button" onclick="clearProgress()">Clear All</button>
+                <button class="clear-button" onclick="submitCrossword()">Submit</button>
             </div>
         </div>
         
@@ -881,6 +882,26 @@
             }
             updateNameButton();
         }
+
+        async function submitCrossword() {
+            const FORM_URL = "https://docs.google.com/forms/d/1e9lTWePVGF-nas4dTfo2AtjiGibtFRmBc7JxyzWjnnk/formResponse";
+            const NAME_FIELD = "entry.1954419010";   // your Name question ID
+            const SCORE_FIELD = "entry.951130346";  // your Score question ID
+
+            const score = await scoreAnswer(grid);
+            const data = new URLSearchParams();
+            data.append(NAME_FIELD, playerName);
+            data.append(SCORE_FIELD, score);
+
+            // no-cors mode lets it post publicly without CORS errors
+            fetch(FORM_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: data
+            });
+            alert("Submitted! Check your Google Sheet.");
+        }
+
     
         // Close modal when clicking outside
         document.getElementById('image-modal').addEventListener('click', function(e) {
