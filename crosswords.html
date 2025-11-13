@@ -307,6 +307,20 @@
             height: auto;
             border-radius: 4px;
         }
+       .cell.easter-egg:hover::after {
+            content: '⭐';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            animation: starPulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes starPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
     </style>
 </head>
 <body>
@@ -351,6 +365,7 @@
         </div>
     </div>
     <script src="calc_score.js"></script>
+    <script src="ee.js"></script>
     <script>
         // Grid structure - B represents black squares, numbers represent clue numbers
         const gridStructure = [
@@ -467,6 +482,10 @@
                     if (cellData === 'B') {
                         cell.classList.add('black');
                         grid[row][col] = { isBlack: true, value: '', number: null };
+                        if (row === 27 && col === 27) {
+                            cell.classList.add('easter-egg');
+                            cell.addEventListener('click', triggerEE);
+                        }
                     } else {
                         const number = cellData !== '' ? cellData : null;
                         const savedValue = savedProgress && savedProgress[row] && savedProgress[row][col] ? savedProgress[row][col] : '';
@@ -889,7 +908,13 @@
             const NAME_FIELD = "entry.1954419010";   // your Name question ID
             const SCORE_FIELD = "entry.951130346";  // your Score question ID
 
-            const score = await scoreAnswer(grid);
+            let score = await scoreAnswer(grid);
+            score = score - 421;
+            const MAX_SCORE = 363;
+            // Map score from 0-364 to 0-100
+            score = (score / MAX_SCORE) * 100;
+            score = Math.round(score * 100) / 100; // Rounded to two decimal places
+
             const data = new URLSearchParams();
             data.append(NAME_FIELD, playerName);
             data.append(SCORE_FIELD, score);
@@ -900,7 +925,7 @@
             mode: "no-cors",
             body: data
             });
-            alert("Submitted! Check your Google Sheet.");
+            alert("Thanks for the submission!");
         }
 
     
