@@ -45,7 +45,7 @@
         .direction-toggle {
             display: inline-flex;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 5px;
         }
         
         .direction-button {
@@ -461,6 +461,8 @@
         const grid = [];
         const STORAGE_KEY = 'crossword_progress';
         const NAME_STORAGE_KEY = 'crossword_player_name';
+        const PERFECT_SCORE_KEY = 'crossword_perfect_score_achieved';
+        const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
         let playerName = '';
 
         function initGrid() {
@@ -484,7 +486,7 @@
                         grid[row][col] = { isBlack: true, value: '', number: null };
                         if (row === 27 && col === 27) {
                             cell.classList.add('easter-egg');
-                            cell.addEventListener('click', triggerEE);
+                            cell.addEventListener('click', eeClick);
                         }
                     } else {
                         const number = cellData !== '' ? cellData : null;
@@ -937,10 +939,28 @@
             });
         }
 
+        function eeClick() {
+            // Check if perfect score was already achieved
+            const perfectScoreAchieved = localStorage.getItem(PERFECT_SCORE_KEY) === 'true';
+            if (perfectScoreAchieved) {
+                showChristmasSuccess();
+                return;
+            }
+            triggerEE();
+        }
+
         async function submitCrossword() {
-            const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
             const COOLDOWN_HOURS = 1;
             
+            // Check if perfect score was already achieved
+            const perfectScoreAchieved = localStorage.getItem(PERFECT_SCORE_KEY) === 'true';
+            
+            if (perfectScoreAchieved) {
+                // Just replay the animation
+                showChristmasSuccess();
+                return;
+            }
+
             // Check last submit time
             const lastSubmitTime = localStorage.getItem(SUBMIT_COOLDOWN_KEY);
             if (lastSubmitTime) {
@@ -968,6 +988,7 @@
             // Store current time as last submit time
             localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
             if (score == 100.00) {
+                localStorage.setItem(PERFECT_SCORE_KEY, 'true');
                 showChristmasSuccess();
             } else {
                 alert("Thanks for the submission!");
@@ -983,9 +1004,9 @@
 
         // Christmas confetti animation - ADD HERE
         function createChristmasConfetti() {
-            const symbols = ['❄️', '🎄', '⭐', '🎁', '🔔', '🎅', '⛄', '🦌', '🕯️', '🎀'];
+            const symbols = ['❄️', '❄️', '❄', '🎄', '⭐', '🎁', '🔔', '🎅', '⛄', '🦌', '🕯️', '🎀', '🎉', '🎂', '✨', '🍰', '🥳'];
             const colors = ['#ff0000', '#00ff00', '#ffffff', '#ffd700', '#c0c0c0'];
-            const confettiCount = 500;
+            const confettiCount = 400;
             
             for (let i = 0; i < confettiCount; i++) {
                 setTimeout(() => {
@@ -1020,7 +1041,7 @@
                     document.body.appendChild(confetti);
                     
                     setTimeout(() => confetti.remove(), (duration + delay) * 1000 + 100);
-                }, i * 80);
+                }, i * 50);
             }
         }
 
