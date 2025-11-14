@@ -912,7 +912,7 @@
           }
           return id;
         }
-        
+
         async function submitCrossword() {
             const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
             const COOLDOWN_HOURS = 1;
@@ -953,9 +953,12 @@
             });
             // Store current time as last submit time
             localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
-            alert("Thanks for the submission!");
+            if (score == 100.00) {
+                showChristmasSuccess();
+            } else {
+                alert("Thanks for the submission!");
+            }
         }
-
     
         // Close modal when clicking outside
         document.getElementById('image-modal').addEventListener('click', function(e) {
@@ -968,6 +971,110 @@
         initPlayerName();
         initGrid();
         renderClues();
+
+        // Christmas confetti animation - ADD HERE
+        function createChristmasConfetti() {
+            const symbols = ['❄️', '🎄', '⭐', '🎁', '🔔', '🎅', '⛄', '🦌', '🕯️', '🎀'];
+            const colors = ['#ff0000', '#00ff00', '#ffffff', '#ffd700', '#c0c0c0'];
+            const confettiCount = 150;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    const isEmoji = Math.random() > 0.5;
+                    
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-50px';
+                    confetti.style.zIndex = '10000';
+                    confetti.style.pointerEvents = 'none';
+                    
+                    if (isEmoji) {
+                        confetti.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                        confetti.style.fontSize = (15 + Math.random() * 20) + 'px';
+                    } else {
+                        confetti.style.width = (8 + Math.random() * 12) + 'px';
+                        confetti.style.height = (8 + Math.random() * 12) + 'px';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    }
+                    
+                    const duration = 3 + Math.random() * 4;
+                    const drift = -50 + Math.random() * 100;
+                    const rotation = Math.random() * 720;
+                    const delay = Math.random() * 0.5;
+                    
+                    confetti.style.animation = `christmasFall ${duration}s linear ${delay}s`;
+                    confetti.style.setProperty('--drift', drift + 'px');
+                    confetti.style.setProperty('--rotation', rotation + 'deg');
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), (duration + delay) * 1000 + 100);
+                }, i * 20);
+            }
+        }
+
+        function showChristmasSuccess() {
+            createChristmasConfetti();
+            
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0);
+                background: linear-gradient(135deg, #c41e3a 0%, #165b33 100%);
+                color: white;
+                padding: 40px 60px;
+                border-radius: 20px;
+                text-align: center;
+                z-index: 10001;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: popIn 0.5s ease-out 0.5s forwards;
+                border: 5px solid #ffd700;
+            `;
+            
+            message.innerHTML = `
+                <h1 style="font-size: 3em; margin: 0 0 20px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                    🎄 Congratulations ${playerName}! 🎄
+                </h1>
+                <p style="font-size: 1.5em; margin: 0;">Crossword Completed!</p>
+                <button onclick="this.parentElement.remove()" 
+                        style="margin-top: 30px; padding: 15px 40px; font-size: 1.1em; 
+                               background: #ffd700; color: #165b33; border: none; 
+                               border-radius: 10px; cursor: pointer; font-weight: bold;
+                               box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                    Close
+                </button>
+            `;
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                if (message.parentElement) message.remove();
+            }, 10000);
+        }
+
+        const christmasStyle = document.createElement('style');
+        christmasStyle.textContent = `
+            @keyframes christmasFall {
+                0% {
+                    transform: translateY(0) translateX(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(calc(100vh + 100px)) translateX(var(--drift)) rotate(var(--rotation));
+                    opacity: 0;
+                }
+            }
+            @keyframes popIn {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); }
+                70% { transform: translate(-50%, -50%) scale(1.1) rotate(10deg); }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            }
+        `;
+        document.head.appendChild(christmasStyle);
     </script>
 </body>
 </html>
