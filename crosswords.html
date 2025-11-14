@@ -189,19 +189,19 @@
         
         .clue-section h2 {
             font-size: 1.5em;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #ddd;
         }
         
         .clue-list {
-            max-height: 600px;
+            max-height: 350px;
             overflow-y: auto;
         }
         
         .clue-item {
-            padding: 8px;
-            margin-bottom: 8px;
+            padding: 3px 8px;
+            margin-bottom: 4px;
             border-radius: 4px;
             transition: background 0.2s;
             display: flex;
@@ -784,10 +784,16 @@
                 const fullText = (beforeImage + afterImage).trim();
                 
                 const contentSpan = document.createElement('span');
-                
+                contentSpan.style.display = 'inline-flex';
+                contentSpan.style.alignItems = 'center';  
+                contentSpan.style.flexWrap = 'wrap';      
+                contentSpan.style.gap = '4px';            
+
                 if (fullText) {
                     // If there's text, show it first
-                    contentSpan.textContent = fullText + ' ';
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = fullText;                 
+                    contentSpan.appendChild(textSpan);               
                 }
                 
                 const button = document.createElement('button');
@@ -967,16 +973,11 @@
             }
         });
 
-        // Initialize
-        initPlayerName();
-        initGrid();
-        renderClues();
-
         // Christmas confetti animation - ADD HERE
         function createChristmasConfetti() {
             const symbols = ['❄️', '🎄', '⭐', '🎁', '🔔', '🎅', '⛄', '🦌', '🕯️', '🎀'];
             const colors = ['#ff0000', '#00ff00', '#ffffff', '#ffd700', '#c0c0c0'];
-            const confettiCount = 150;
+            const confettiCount = 500;
             
             for (let i = 0; i < confettiCount; i++) {
                 setTimeout(() => {
@@ -999,10 +1000,10 @@
                         confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
                     }
                     
-                    const duration = 3 + Math.random() * 4;
+                    const duration = 10 + Math.random() * 10;
                     const drift = -50 + Math.random() * 100;
                     const rotation = Math.random() * 720;
-                    const delay = Math.random() * 0.5;
+                    const delay = Math.random() * 5;
                     
                     confetti.style.animation = `christmasFall ${duration}s linear ${delay}s`;
                     confetti.style.setProperty('--drift', drift + 'px');
@@ -1011,7 +1012,7 @@
                     document.body.appendChild(confetti);
                     
                     setTimeout(() => confetti.remove(), (duration + delay) * 1000 + 100);
-                }, i * 20);
+                }, i * 80);
             }
         }
 
@@ -1075,6 +1076,12 @@
             }
         `;
         document.head.appendChild(christmasStyle);
+
+        // Initialize
+        initPlayerName();
+        initGrid();
+        renderClues();
+
     </script>
 </body>
 </html>
