@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULP Holiday Cryptics Crosswords</title>
+    <title>ULP Holiday Cryptic Crosswords</title>
     <style>
         * {
             box-sizing: border-box;
@@ -326,7 +326,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>ULP HOLIDAY CRYPTICS</h1>
+            <h1>ULP HOLIDAY CRYPTIC CROSSWORDS</h1>
             <div class="direction-toggle">
                 <button class="direction-button active" id="across-btn" onclick="setDirection('across')">ACROSS</button>
                 <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
@@ -919,6 +919,24 @@
           return id;
         }
 
+        // Generic function to post to Google Form
+        function postToGoogleForm(name, score) {
+            const FORM_URL = "https://docs.google.com/forms/d/1e9lTWePVGF-nas4dTfo2AtjiGibtFRmBc7JxyzWjnnk/formResponse";
+            const NAME_FIELD = "entry.1954419010";
+            const SCORE_FIELD = "entry.951130346";
+
+            const data = new URLSearchParams();
+            data.append(NAME_FIELD, name);
+            data.append(SCORE_FIELD, score);
+
+            // no-cors mode lets it post publicly without CORS errors
+            fetch(FORM_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: data
+            });
+        }
+
         async function submitCrossword() {
             const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
             const COOLDOWN_HOURS = 1;
@@ -935,10 +953,7 @@
                     return;
                 }
             }
-            const FORM_URL = "https://docs.google.com/forms/d/1e9lTWePVGF-nas4dTfo2AtjiGibtFRmBc7JxyzWjnnk/formResponse";
-            const NAME_FIELD = "entry.1954419010";   // your Name question ID
-            const SCORE_FIELD = "entry.951130346";  // your Score question ID
-
+            
             let score = await scoreAnswer(grid);
             score = score - 421;
             const MAX_SCORE = 363;
@@ -946,17 +961,10 @@
             score = (score / MAX_SCORE) * 100;
             score = Math.round(score * 100) / 100; // Rounded to two decimal places
 
-            const data = new URLSearchParams();
             let name = playerName + "_" + getClientId();
-            data.append(NAME_FIELD, name);
-            data.append(SCORE_FIELD, score);
+            // Post to Google Form
+            postToGoogleForm(name, score);
 
-            // no-cors mode lets it post publicly without CORS errors
-            fetch(FORM_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: data
-            });
             // Store current time as last submit time
             localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
             if (score == 100.00) {
