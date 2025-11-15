@@ -326,7 +326,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>ULP HOLIDAY CRYPTIC CROSSWORDS</h1>
+            <h1>ULP HOLIDAY CRYPTIC CROSSWORDS   <span id="git-version" style="font-size: 0.5em; color: #999; font-weight: normal;">v1.0</span></h1>
             <div class="direction-toggle">
                 <button class="direction-button active" id="across-btn" onclick="setDirection('across')">ACROSS</button>
                 <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
@@ -366,7 +366,13 @@
     </div>
     <script src="calc_score.js"></script>
     <script src="ee.js"></script>
+    <script src="version.js"></script>
     <script>
+        console.log('Version:', GIT_VERSION, 'Date:', GIT_DATE);
+        // Display Git version if available
+        if (typeof GIT_VERSION !== 'undefined') {
+            document.getElementById('git-version').textContent = `${GIT_VERSION}`;
+        }
         // Grid structure - B represents black squares, numbers represent clue numbers
         const gridStructure = [
             [ '1',  '2',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '',  '', 'B', 'B', 'B', 'B', 'B', '3', 'B', 'B'],
