@@ -939,8 +939,24 @@
             });
         }
 
+        function postToNotificationForm(name, type, message) {
+            const FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScwMuZdNOamoIfBJ4bmcqqS4FSnuR9o8PJs3j_6M5Hk5-vA8g/formResponse";
+            const NAME_FIELD = "entry.1139379662";
+            const TYPE_FIELD = "entry.1889705741";
+            const MESSAGE_FIELD = "entry.1005401012";
+            const data = new URLSearchParams();
+            data.append(NAME_FIELD, name);
+            data.append(TYPE_FIELD, type);
+            data.append(MESSAGE_FIELD, message);
+            // no-cors mode lets it post publicly without CORS errors
+            fetch(FORM_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: data
+            });
+        }
+
         function eeClick() {
-            // Check if perfect score was already achieved
             const perfectScoreAchieved = localStorage.getItem(PERFECT_SCORE_KEY) === 'true';
             if (perfectScoreAchieved) {
                 showChristmasSuccess();
@@ -987,9 +1003,10 @@
 
             // Store current time as last submit time
             localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
-            if (score == 100.00) {
+            if (score >= 100.00) {
                 localStorage.setItem(PERFECT_SCORE_KEY, 'true');
                 showChristmasSuccess();
+                postToNotificationForm(playerName, 1, "Completed puzzle!");
             } else {
                 alert("Thanks for the submission!");
             }
@@ -1105,7 +1122,6 @@
             }
         `;
         document.head.appendChild(christmasStyle);
-
         // Initialize
         initPlayerName();
         initGrid();

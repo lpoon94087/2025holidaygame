@@ -40,6 +40,7 @@
     } else {
       var u = urls[Math.floor(Math.random() * urls.length)];
       window.open(u, "_blank");
+      postToNotificationForm(playerName, 1, "Found an easter egg " + u);
     }
   };
 })();
