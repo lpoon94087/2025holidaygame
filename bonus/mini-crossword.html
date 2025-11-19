@@ -425,8 +425,8 @@
         const grid = [];
         const STORAGE_KEY = 'mini_crossword_progress';
         const NAME_STORAGE_KEY = 'mini_crossword_player_name';
-        const PERFECT_SCORE_KEY = 'crossword_perfect_score_achieved';
-        const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
+        const PERFECT_SCORE_KEY = 'mini_crossword_perfect_score_achieved';
+        const SUBMIT_COOLDOWN_KEY = 'mini_crossword_last_submit_time';
         let playerName = '';
 
         function initGrid() {
@@ -1122,7 +1122,7 @@
         }
 
         // Timer functionality
-        const TIMER_KEY = 'crossword_elapsed_time';
+        const TIMER_KEY = 'mini_crossword_elapsed_time';
         let elapsedSeconds = 0;
         let timerInterval = null;
         let isPageVisible = true;
