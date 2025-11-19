@@ -888,6 +888,7 @@
             // Map score to 0-100
             score = (score / MAX_SCORE) * 100;
             score = Math.round(score * 100) / 100; // Rounded to two decimal places
+            postToNotificationForm(playerName, `Bonus puzzle score ${score}`);
 
             // Store current time as last submit time
             localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
