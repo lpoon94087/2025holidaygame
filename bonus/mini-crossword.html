@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Crossword Puzzle</title>
+    <title>Bonus Cryptic Crosswords</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,7 +13,9 @@
         
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            //background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: url("../QRCODE_BONUS.webp") no-repeat center center fixed;
+
             padding: 20px;
             min-height: 100vh;
         }
@@ -321,16 +323,29 @@
             height: auto;
             border-radius: 4px;
         }
+
+        .timer-display {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2196f3;
+            z-index: 999;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>ULP Bonus Cryptic Crosswords</h1>
-            <p>7x7 Grid</p>
+        <h1>ULP BONUS CRYPTIC CROSSWORDS   <span id="git-version" style="font-size: 0.5em; color: #999; font-weight: normal;">v1.0</span></h1>
+
             <div class="direction-toggle">
-                <button class="direction-button active" id="across-btn" onclick="setDirection('across')">ACROSS</button>
-                <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
                 <button class="name-button" id="name-btn" onclick="changeName()">Player</button>
                 <button class="clear-button" onclick="clearProgress()">Clear All</button>
                 <button class="submit-button" onclick="submitCrossword()">Submit</button>
@@ -355,6 +370,9 @@
             </div>
         </div>
     </div>
+    <div class="timer-display" id="timer-display">
+        ⏱️ <span id="timer-time">00:00:00</span>
+    </div>    
 
     <div class="modal" id="image-modal">
         <div class="modal-content">
@@ -365,8 +383,15 @@
             <img id="modal-image" src="" alt="Clue Image">
         </div>
     </div>
+    <script src="../version.js"></script>
 
     <script>
+        console.log('Version:', GIT_VERSION, 'Date:', GIT_DATE);
+        // Display Git version if available
+        if (typeof GIT_VERSION !== 'undefined') {
+            document.getElementById('git-version').textContent = `${GIT_VERSION}`;
+        }
+
         // Grid structure - B represents black squares, numbers represent clue numbers
         const gridStructure = [
             [ '1',  '', '2',  '', '3',  '', '4'],
@@ -400,6 +425,8 @@
         const grid = [];
         const STORAGE_KEY = 'mini_crossword_progress';
         const NAME_STORAGE_KEY = 'mini_crossword_player_name';
+        const PERFECT_SCORE_KEY = 'crossword_perfect_score_achieved';
+        const SUBMIT_COOLDOWN_KEY = 'crossword_last_submit_time';
         let playerName = '';
 
         function initGrid() {
@@ -829,20 +856,158 @@
             updateNameButton();
         }
 
-        function submitCrossword() {
-            // TODO: Add your answer checking logic here
-            // You can access the grid with: grid[row][col].value
-            // Example:
-            // let score = 0;
-            // for (let row = 0; row < GRID_SIZE; row++) {
-            //     for (let col = 0; col < GRID_SIZE; col++) {
-            //         if (!grid[row][col].isBlack) {
-            //             // Check if grid[row][col].value matches correct answer
-            //         }
-            //     }
-            // }
-            alert(`Crossword submitted by ${playerName}!\n\nAdd your checking logic in the submitCrossword() function.`);
+        async function submitCrossword() {
+            const COOLDOWN_HOURS = 1;
+            
+            // Check if perfect score was already achieved
+            const perfectScoreAchieved = localStorage.getItem(PERFECT_SCORE_KEY) === 'true';
+            
+            if (perfectScoreAchieved) {
+                // Just replay the animation
+                showChristmasSuccess();
+                return;
+            }
+
+            // Check last submit time
+            const lastSubmitTime = localStorage.getItem(SUBMIT_COOLDOWN_KEY);
+            if (false) {
+            //if (lastSubmitTime) {
+                const timeSinceLastSubmit = Date.now() - parseInt(lastSubmitTime);
+                const hoursElapsed = timeSinceLastSubmit / (1000 * 60 * 60);
+                
+                if (hoursElapsed < COOLDOWN_HOURS) {
+                    const minutesRemaining = Math.ceil((COOLDOWN_HOURS * 60) - (timeSinceLastSubmit / (1000 * 60)));
+                    alert(`Please wait ${minutesRemaining} more minute(s) before submitting again.`);
+                    return;
+                }
+            }
+
+            let score = await scoreAnswer(grid);
+            score = score - 9;
+            const MAX_SCORE = 40;
+            // Map score to 0-100
+            score = (score / MAX_SCORE) * 100;
+            score = Math.round(score * 100) / 100; // Rounded to two decimal places
+
+            // Store current time as last submit time
+            localStorage.setItem(SUBMIT_COOLDOWN_KEY, Date.now().toString());
+            if (score >= 100.00) {
+                localStorage.setItem(PERFECT_SCORE_KEY, 'true');
+                showChristmasSuccess();
+                let timeStr = formatTime(elapsedSeconds);
+                // Use type=2 for bous
+                postToNotificationForm(playerName, 2, `Completed bonus puzzle in ${timeStr}`);
+            } else {
+                alert("Thanks for the submission!");
+            }
         }
+
+
+        // Christmas confetti animation - ADD HERE
+        function createChristmasConfetti() {
+            const symbols = ['❄️', '❄️', '❄', '🎄', '⭐', '🎁', '🔔', '🎅', '⛄', '🦌', '🕯️', '🎀', '🎉', '🎂', '✨', '🍰', '🥳'];
+            const colors = ['#ff0000', '#00ff00', '#ffffff', '#ffd700', '#c0c0c0'];
+            const confettiCount = 400;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    const isEmoji = Math.random() > 0.5;
+                    
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-50px';
+                    confetti.style.zIndex = '10000';
+                    confetti.style.pointerEvents = 'none';
+                    
+                    if (isEmoji) {
+                        confetti.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                        confetti.style.fontSize = (15 + Math.random() * 20) + 'px';
+                    } else {
+                        confetti.style.width = (8 + Math.random() * 12) + 'px';
+                        confetti.style.height = (8 + Math.random() * 12) + 'px';
+                        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    }
+                    
+                    const duration = 10 + Math.random() * 10;
+                    const drift = -50 + Math.random() * 100;
+                    const rotation = Math.random() * 720;
+                    const delay = Math.random() * 5;
+                    
+                    confetti.style.animation = `christmasFall ${duration}s linear ${delay}s`;
+                    confetti.style.setProperty('--drift', drift + 'px');
+                    confetti.style.setProperty('--rotation', rotation + 'deg');
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), (duration + delay) * 1000 + 100);
+                }, i * 50);
+            }
+        }
+
+        function showChristmasSuccess() {
+            createChristmasConfetti();
+            stopTimer(); // Stop the timer when puzzle is complete
+            
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0);
+                background: linear-gradient(135deg, #c41e3a 0%, #165b33 100%);
+                color: white;
+                padding: 40px 60px;
+                border-radius: 20px;
+                text-align: center;
+                z-index: 10001;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                animation: popIn 0.5s ease-out 0.5s forwards;
+                border: 5px solid #ffd700;
+            `;
+            
+            message.innerHTML = `
+                <h1 style="font-size: 3em; margin: 0 0 20px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                    🎄 Congratulations ${playerName}! 🎄
+                </h1>
+                <p style="font-size: 1.5em; margin: 0;">Crossword Completed!</p>
+                <p style="font-size: 1.2em; margin-top: 10px;">Time: ${formatTime(elapsedSeconds)}</p>
+                <button onclick="this.parentElement.remove()" 
+                        style="margin-top: 30px; padding: 15px 40px; font-size: 1.1em; 
+                               background: #ffd700; color: #165b33; border: none; 
+                               border-radius: 10px; cursor: pointer; font-weight: bold;
+                               box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                    Close
+                </button>
+            `;
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                if (message.parentElement) message.remove();
+            }, 10000);
+        }
+
+        const christmasStyle = document.createElement('style');
+        christmasStyle.textContent = `
+            @keyframes christmasFall {
+                0% {
+                    transform: translateY(0) translateX(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(calc(100vh + 100px)) translateX(var(--drift)) rotate(var(--rotation));
+                    opacity: 0;
+                }
+            }
+            @keyframes popIn {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); }
+                70% { transform: translate(-50%, -50%) scale(1.1) rotate(10deg); }
+                100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            }
+        `;
+        document.head.appendChild(christmasStyle);
 
         // Close modal when clicking outside
         document.getElementById('image-modal').addEventListener('click', function(e) {
@@ -850,6 +1015,195 @@
                 closeModal();
             }
         });
+        const answerHashes =
+        [
+        "7a2043eaa25435df54ecece36477c1758fa98a96f1b3836daf5171d177c9ec81",
+        "a7a43be6ff28c78145ff0b80293447ae63feab349430397a5cb85e9d2c430b30",
+        "afc92ccfe840eda35725d0691fea2c1c432b0e7c9a6fd7441136cbcc6e771e1f",
+        "fe28175cef90ba498cfa34099c9666f14bd5de9bf354e1a30028916c8aced99d",
+        "b89d5221094c8882d8dfe3e197ea4152d14a508e70565a4f7493c131438ab515",
+        "29d39d14757d20fdde2324d78b2e10d00a93c748bed9b1d58fb13e78fa77820b",
+        "6db55780a502b1e2967e8e644ce8ec62f8271ef08fc4d98d43dbad6bbc2524ee",
+        "135ad18f8620245c030baf54113b6bc59325a88dbd2927c9a111edff7e17b3e2",
+        "b57eff5ce174b4934e207ec56343e69e87bfe21c4b6cd785cb1a157262ee7124",
+        "ec33e3c0d080f198222d0dfc92c1522039479be246211fd82dcebdaa63ec3aea",
+        "f2d0a30ce3440bb42c17c51f08cbd3d0d1e39a66f31c90d920f0e12014191b1f",
+        "f368657046cbb0ee9da8974b7ec74427515eb5217a8cbfe07ecfb3b0aa43a7b2",
+        "e1928f4fdffa2593eb1b1c30579c05bc79feb37a7e0a2b1b9a31b1632a34d0fa",
+        "9832b0e50d15b26d3c6ca0cf4be42c2f3dc5721f86ee63c32cd6b3d0ea97cb58",
+        "652368a1c9db809acd70302d9902b5048334909872c7ac2a4759218892ca118e",
+        "90a989702245f770218f9dc4b8b8debcc98fce0c8015df3eedf130f44614a673",
+        "ac9bae2e7cda0930b10b6b907217e962feb96046d81ccde85b840ab3b9384242",
+        "d1938260448b2cef4c2e1f5e3a159965aa5c4dcfc28a85f26c3897f968ffea5e",
+        "9dfb82cdcff453d1da41b634def3c29ea6727610cac5372b9232e254a9d86d00",
+        "b5f4b2ef3a1fb137fe0283649d351943ac133a735cbb49efbe78c8676f39e734",
+        "83bf57b4e66aebc29a97b8f2211d03b9cda2bbacf8cbba0c5e9412eb9a91a02f",
+        "0d9cddfd67164264a155612270607f2fa1d2ebe93f93ed9787d963a220b16174",
+        "4d43e3dd91d9812d77f5bda77b2fa0de9394f9045bd054efa1a2877d923e1dcd",
+        "166b5a115288aa1df819bea741af802796ebb701d6736ab57cd3f004c8f29bd5",
+        "3689ac04bd38b824b7723a5b80da549fb55f687defd2bf6c1c3f967bb4768c95",
+        "b9a99a788b4cf22ea457f41741904bb5f6d434886c0f5d96cfb856a572a8770f",
+        "71da01618b16815bd7e6a760c86b585ca255dd8be269348aa5ffce14320532c1",
+        "0004a3f5c58b6ccc62aea7b6ba42453557f4122df59aacd943f5725fb46f75d9",
+        "16bead94e734dafdf8066a8fe915b7f77d1a6aa683ca36423de32f2d1e46aab0",
+        "d723954b6a146d8cc385d9750ebd68ea5d125f6ed802c5900ecc1106708e2423",
+        "21b31015eed8182544c73adaeeb510bf8305dcaf3690c5825895e5e2832679bb",
+        "92087e8c0c732d505c9905c0e51941cc890e446cab57a2eb666685a8fc829c09",
+        "2e4965270d46a81c8ee7aa0a612fdd53b3cb6dcbeebf6309c3c88c85873560d6",
+        "a5c203273305f8160c2aa1fddb8434f6afae808cb874cd6e05c7af287f386ab5",
+        "497983bb92160c66b2e07ac3e47a35cb497071a261562a1cc60f9c61c71d81ff",
+        "56ee95abeae73db59b1eea9c59f0533b76cc50cc823d374987d18134e06280e3",
+        "d3f28a0c5143e9d0615800b917a9786858d14819e5aae0103a97cf6285944d26",
+        "c90ab11424b7bc29177ad81f85584c7d8ace187b648de49befb844acb81a9716",
+        "7db6bbcb9a8bc7e951453e1aee0868688b08169ba594a1f74854e96023b5d0f1",
+        "0323dc5508ec33833d26b55affb420783016c63812d9490538aca8385e4ba548",
+        "03a1c9b76d4b48258cfefd8d421d8683529f7a3d062b3882a7aa77c8bac54696",
+        "0113cf96a2f8e78e80c86c8d03dda7304ac6b90722dde1644038392b3ec96ddd",
+        "6898aca2c7e44c8971d5f707429f716544d78d685f9597b9478a84745fc2cb56",
+        "70d88d0dcbc6550d4d8e5fbffa9d330d741897882d263f0632d970175b16d1cd",
+        "c094cd5e456e100e77be60680c7d3277cce2d3cb6cb8f802fa3367a65eeb297a",
+        "87866b8590bf1526c5f06c8224b1432ce8c154e565a1953f17131aa2abdc3015",
+        "8d89c0b9b7415bc0f974919726a3808d0f251f3788bd7c5c624c5804bb34e14c",
+        "4c41ef548988e7ed27b6f880336097e200bc0b8bf5861ed2f349ca3df1276c23",
+        "afe9ff7fe8c0a69fd3c5148a1fe5ffc2667300596f36bcfaab9c619b0414b3d1"
+        ];
+        
+        // Hash function using Web Crypto API
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        // Scoring function
+        async function scoreAnswer(mygrid) {
+            let progressString = '';
+            for (let row = 0; row < 7; row++) {
+                for (let col = 0; col < 7; col++) {
+                    // Get the value; use '#' if it's empty/falsy
+                    const value = mygrid[row][col].value;
+                    progressString += value || '#'; 
+                }
+            }
+            console.log("progressString="+ progressString);
+
+            let score = 0;
+            let total = 0;
+            const PRIME = 1009;  // must match what you used when generating answerHashes
+
+            for (let i = 0; i < answerHashes.length && i < progressString.length; i++) {
+                // combine the character and its position (salt)
+                const marker = `${progressString[i]}:${i * PRIME}`;
+                const h = await sha256(marker);
+                if (h === answerHashes[i]) {
+                    score++;
+                }
+                total++;
+            }
+            console.log("score="+ score);
+            return score;
+        }
+
+        function postToNotificationForm(name, type, message) {
+            const FORM_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScwMuZdNOamoIfBJ4bmcqqS4FSnuR9o8PJs3j_6M5Hk5-vA8g/formResponse";
+            const NAME_FIELD = "entry.1139379662";
+            const TYPE_FIELD = "entry.1889705741";
+            const MESSAGE_FIELD = "entry.1005401012";
+            const data = new URLSearchParams();
+            data.append(NAME_FIELD, name);
+            data.append(TYPE_FIELD, type);
+            data.append(MESSAGE_FIELD, message);
+            // no-cors mode lets it post publicly without CORS errors
+            fetch(FORM_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: data
+            });
+        }
+
+        // Timer functionality
+        const TIMER_KEY = 'crossword_elapsed_time';
+        let elapsedSeconds = 0;
+        let timerInterval = null;
+        let isPageVisible = true;
+
+        function loadElapsedTime() {
+            try {
+                const saved = localStorage.getItem(TIMER_KEY);
+                return saved ? parseInt(saved) : 0;
+            } catch (e) {
+                console.error('Error loading timer:', e);
+                return 0;
+            }
+        }
+
+        function saveElapsedTime() {
+            localStorage.setItem(TIMER_KEY, elapsedSeconds.toString());
+        }
+
+        function formatTime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (days > 0) {
+                return `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer-time').textContent = formatTime(elapsedSeconds);
+        }
+
+        function startTimer() {
+            if (timerInterval) return; // Already running
+            
+            timerInterval = setInterval(() => {
+                if (isPageVisible) {
+                    elapsedSeconds++;
+                    updateTimerDisplay();
+                    saveElapsedTime();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            elapsedSeconds = 0;
+            updateTimerDisplay();
+            saveElapsedTime();
+        }
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            isPageVisible = !document.hidden;
+            if (isPageVisible) {
+                console.log('Timer resumed');
+            } else {
+                console.log('Timer paused');
+            }
+        });
+
+        // Handle page blur/focus (for additional browser support)
+        window.addEventListener('blur', () => {
+            isPageVisible = false;
+        });
+
+        window.addEventListener('focus', () => {
+            isPageVisible = true;
+        });
+
+        // Initialize timer
+        elapsedSeconds = loadElapsedTime();
+        updateTimerDisplay();
+        startTimer();
 
         // Initialize
         initPlayerName();
