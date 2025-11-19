@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Crossword Puzzle</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .direction-toggle {
+            display: inline-flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .direction-button {
+            padding: 10px 20px;
+            border: 2px solid #2196f3;
+            background: white;
+            color: #2196f3;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .direction-button:hover {
+            background: #e3f2fd;
+        }
+        
+        .direction-button.active {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .clear-button {
+            padding: 8px 16px;
+            border: 2px solid #f44336;
+            background: white;
+            color: #f44336;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+        
+        .clear-button:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .puzzle-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .grid-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .crossword-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            border: 4px solid black;
+            gap: 0;
+        }
+        
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #999;
+            position: relative;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .cell.black {
+            background: black;
+            cursor: default;
+        }
+        
+        .cell:not(.black):hover {
+            background: #e3f2fd;
+        }
+        
+        .cell.highlighted {
+            background: #bbdefb !important;
+        }
+        
+        .cell.selected {
+            background: #fff59d !important;
+            outline: 2px solid #2196f3;
+            outline-offset: -2px;
+        }
+        
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .cell-letter {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .clues-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+        }
+        
+        .clue-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .clue-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .clue-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .clue-item {
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        
+        .clue-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .clue-item.active {
+            background: #fff59d;
+            border-left: 4px solid #2196f3;
+            padding-left: 4px;
+        }
+        
+        .clue-item.highlighted {
+            background: #e3f2fd;
+            border-left: 4px solid #90caf9;
+            padding-left: 4px;
+        }
+        
+        .clue-number {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .image-button {
+            background: none;
+            border: none;
+            color: #2196f3;
+            cursor: pointer;
+            text-decoration: underline;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            padding: 0;
+            margin-left: 4px;
+        }
+        
+        .image-button:hover {
+            color: #1976d2;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.5em;
+        }
+        
+        .close-button {
+            background: #f5f5f5;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .modal-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ULP Bonus Cryptic Crosswords</h1>
+            <p>7x7 Grid</p>
+            <div class="direction-toggle">
+                <button class="direction-button active" id="across-btn" onclick="setDirection('across')">ACROSS</button>
+                <button class="direction-button" id="down-btn" onclick="setDirection('down')">DOWN</button>
+                <button class="clear-button" onclick="clearProgress()">Clear All</button>
+            </div>
+        </div>
+        
+        <div class="puzzle-container">
+            <div class="grid-container">
+                <div class="crossword-grid" id="crossword-grid"></div>
+            </div>
+            
+            <div class="clues-container">
+                <div class="clue-section">
+                    <h2>ACROSS</h2>
+                    <div class="clue-list" id="across-clues"></div>
+                </div>
+                
+                <div class="clue-section">
+                    <h2>DOWN</h2>
+                    <div class="clue-list" id="down-clues"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="image-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Image</h3>
+                <button class="close-button" onclick="closeModal()">×</button>
+            </div>
+            <img id="modal-image" src="" alt="Clue Image">
+        </div>
+    </div>
+
+    <script>
+        // Grid structure - B represents black squares, numbers represent clue numbers
+        const gridStructure = [
+            [ '1',  '', '2',  '', '3',  '', '4'],
+            [ '',  'B',  '', 'B',  '', 'B',  ''],
+            [ '5',  '',  '',  '',  '',  '',  ''],
+            [ '',  'B',  '', 'B',  '', 'B',  ''],
+            [ '6',  '',  '',  '',  '',  '',  ''],
+            [ '',  'B',  '', 'B',  '', 'B',  ''],
+            [ '7',  '',  '',  '',  '',  '',  '']
+        ];
+
+        // Clues with image support
+        const clues = {
+            across: [
+                { num: 1, text: "See IMAGE_1A" },
+                { num: 5, text: "See IMAGE_5A" },
+                { num: 6, text: "See IMAGE_6A" },
+                { num: 7, text: "See IMAGE_7A" }
+            ],
+            down: [
+                { num: 1, text: "See IMAGE_1D" },
+                { num: 2, text: "See IMAGE_2D" },
+                { num: 3, text: "See IMAGE_3D" },
+                { num: 4, text: "See IMAGE_4D" }
+            ]
+        };
+
+        const GRID_SIZE = 7;
+        let currentCell = null;
+        let direction = 'across';
+        const grid = [];
+        const STORAGE_KEY = 'mini_crossword_progress';
+
+        function initGrid() {
+            const gridElement = document.getElementById('crossword-grid');
+            const savedProgress = loadProgress();
+            
+            for (let row = 0; row < GRID_SIZE; row++) {
+                grid[row] = [];
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    const cellData = gridStructure[row][col];
+                    
+                    if (cellData === 'B') {
+                        cell.classList.add('black');
+                        grid[row][col] = { isBlack: true, value: '', number: null };
+                    } else {
+                        const number = cellData !== '' ? cellData : null;
+                        const savedValue = savedProgress?.[row]?.[col] || '';
+                        grid[row][col] = { isBlack: false, value: savedValue, number: number };
+                        
+                        if (number) {
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'cell-number';
+                            numSpan.textContent = number;
+                            cell.appendChild(numSpan);
+                        }
+                        
+                        const letterDiv = document.createElement('div');
+                        letterDiv.className = 'cell-letter';
+                        letterDiv.textContent = savedValue;
+                        cell.appendChild(letterDiv);
+                        
+                        cell.addEventListener('click', () => handleCellClick(row, col));
+                        cell.tabIndex = 0;
+                        cell.addEventListener('keydown', (e) => handleKeyDown(e, row, col));
+                    }
+                    
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (grid[row][col].isBlack) return;
+            
+            if (currentCell && currentCell.row === row && currentCell.col === col) {
+                direction = direction === 'across' ? 'down' : 'across';
+                updateDirectionButtons();
+            } else {
+                currentCell = { row, col };
+            }
+            
+            updateSelection();
+            focusCell(row, col);
+        }
+
+        function handleKeyDown(e, row, col) {
+            if (grid[row][col].isBlack) return;
+            
+            const key = e.key.toUpperCase();
+            
+            if (key === ' ' || key === 'SPACEBAR') {
+                direction = direction === 'across' ? 'down' : 'across';
+                updateDirectionButtons();
+                updateSelection();
+                e.preventDefault();
+                return;
+            }
+            
+            if (/^[A-Z]$/.test(key)) {
+                grid[row][col].value = key;
+                updateCellDisplay(row, col);
+                saveProgress();
+                moveToNextCell(row, col);
+                e.preventDefault();
+            } else if (key === 'BACKSPACE') {
+                grid[row][col].value = '';
+                updateCellDisplay(row, col);
+                saveProgress();
+                moveToPrevCell(row, col);
+                e.preventDefault();
+            } else if (key === 'ARROWLEFT' || key === 'ARROWRIGHT' || key === 'ARROWUP' || key === 'ARROWDOWN') {
+                e.preventDefault();
+                handleArrowKey(key, row, col);
+            }
+        }
+
+        function moveToNextCell(row, col) {
+            if (direction === 'across') {
+                for (let c = col + 1; c < GRID_SIZE; c++) {
+                    if (!grid[row][c].isBlack) {
+                        currentCell = { row, col: c };
+                        updateSelection();
+                        focusCell(row, c);
+                        return;
+                    }
+                }
+            } else {
+                for (let r = row + 1; r < GRID_SIZE; r++) {
+                    if (!grid[r][col].isBlack) {
+                        currentCell = { row: r, col };
+                        updateSelection();
+                        focusCell(r, col);
+                        return;
+                    }
+                }
+            }
+        }
+
+        function moveToPrevCell(row, col) {
+            if (direction === 'across') {
+                for (let c = col - 1; c >= 0; c--) {
+                    if (!grid[row][c].isBlack) {
+                        currentCell = { row, col: c };
+                        updateSelection();
+                        focusCell(row, c);
+                        return;
+                    }
+                }
+            } else {
+                for (let r = row - 1; r >= 0; r--) {
+                    if (!grid[r][col].isBlack) {
+                        currentCell = { row: r, col };
+                        updateSelection();
+                        focusCell(r, col);
+                        return;
+                    }
+                }
+            }
+        }
+
+        function handleArrowKey(key, row, col) {
+            let newRow = row, newCol = col;
+            
+            if (key === 'ARROWLEFT') newCol--;
+            else if (key === 'ARROWRIGHT') newCol++;
+            else if (key === 'ARROWUP') newRow--;
+            else if (key === 'ARROWDOWN') newRow++;
+            
+            if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE && !grid[newRow][newCol].isBlack) {
+                currentCell = { row: newRow, col: newCol };
+                updateSelection();
+                focusCell(newRow, newCol);
+            }
+        }
+
+        function updateSelection() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('selected', 'highlighted');
+            });
+            
+            document.querySelectorAll('.clue-item').forEach(clue => {
+                clue.classList.remove('active', 'highlighted');
+            });
+            
+            if (currentCell) {
+                const cell = document.querySelector(`[data-row="${currentCell.row}"][data-col="${currentCell.col}"]`);
+                if (cell) cell.classList.add('selected');
+                
+                highlightWord(currentCell.row, currentCell.col);
+                highlightClues(currentCell.row, currentCell.col);
+            }
+        }
+        
+        function highlightClues(row, col) {
+            const acrossClueNum = findClueNumber(row, col, 'across');
+            const downClueNum = findClueNumber(row, col, 'down');
+            
+            if (direction === 'across' && acrossClueNum) {
+                const clueItem = document.querySelector(`#across-clues .clue-item[data-clue-num="${acrossClueNum}"]`);
+                if (clueItem) {
+                    clueItem.classList.add('active');
+                    clueItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            if (direction === 'down' && downClueNum) {
+                const clueItem = document.querySelector(`#down-clues .clue-item[data-clue-num="${downClueNum}"]`);
+                if (clueItem) {
+                    clueItem.classList.add('active');
+                    clueItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            if (direction === 'across' && downClueNum) {
+                const clueItem = document.querySelector(`#down-clues .clue-item[data-clue-num="${downClueNum}"]`);
+                if (clueItem) clueItem.classList.add('highlighted');
+            }
+            
+            if (direction === 'down' && acrossClueNum) {
+                const clueItem = document.querySelector(`#across-clues .clue-item[data-clue-num="${acrossClueNum}"]`);
+                if (clueItem) clueItem.classList.add('highlighted');
+            }
+        }
+        
+        function findClueNumber(row, col, dir) {
+            if (dir === 'across') {
+                let startCol = col;
+                while (startCol > 0 && !grid[row][startCol - 1].isBlack) {
+                    startCol--;
+                }
+                return grid[row][startCol].number;
+            } else {
+                let startRow = row;
+                while (startRow > 0 && !grid[startRow - 1][col].isBlack) {
+                    startRow--;
+                }
+                return grid[startRow][col].number;
+            }
+        }
+        
+        function highlightWord(row, col) {
+            if (direction === 'across') {
+                let startCol = col;
+                while (startCol > 0 && !grid[row][startCol - 1].isBlack) {
+                    startCol--;
+                }
+                
+                let c = startCol;
+                while (c < GRID_SIZE && !grid[row][c].isBlack) {
+                    if (c !== col) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${c}"]`);
+                        if (cell) cell.classList.add('highlighted');
+                    }
+                    c++;
+                }
+            } else {
+                let startRow = row;
+                while (startRow > 0 && !grid[startRow - 1][col].isBlack) {
+                    startRow--;
+                }
+                
+                let r = startRow;
+                while (r < GRID_SIZE && !grid[r][col].isBlack) {
+                    if (r !== row) {
+                        const cell = document.querySelector(`[data-row="${r}"][data-col="${col}"]`);
+                        if (cell) cell.classList.add('highlighted');
+                    }
+                    r++;
+                }
+            }
+        }
+        
+        function setDirection(newDirection) {
+            direction = newDirection;
+            updateDirectionButtons();
+            updateSelection();
+        }
+        
+        function updateDirectionButtons() {
+            document.getElementById('across-btn').classList.toggle('active', direction === 'across');
+            document.getElementById('down-btn').classList.toggle('active', direction === 'down');
+        }
+
+        function focusCell(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cell) cell.focus();
+        }
+
+        function updateCellDisplay(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cell) {
+                const letterDiv = cell.querySelector('.cell-letter');
+                if (letterDiv) letterDiv.textContent = grid[row][col].value;
+            }
+        }
+
+        function renderClues() {
+            const acrossContainer = document.getElementById('across-clues');
+            const downContainer = document.getElementById('down-clues');
+            
+            clues.across.forEach(clue => {
+                acrossContainer.appendChild(createClueElement(clue));
+            });
+            
+            clues.down.forEach(clue => {
+                downContainer.appendChild(createClueElement(clue));
+            });
+        }
+
+        function createClueElement(clue) {
+            const div = document.createElement('div');
+            div.className = 'clue-item';
+            div.dataset.clueNum = clue.num;
+            
+            const numSpan = document.createElement('span');
+            numSpan.className = 'clue-number';
+            numSpan.textContent = clue.num + '.';
+            
+            div.appendChild(numSpan);
+            
+            const imageMatch = clue.text.match(/IMAGE_(\d+)([AD])/);
+            if (imageMatch) {
+                // Extract text before and after IMAGE tag
+                const beforeImage = clue.text.substring(0, clue.text.indexOf('IMAGE_'));
+                const afterImage = clue.text.substring(clue.text.indexOf('IMAGE_') + imageMatch[0].length);
+                const fullText = (beforeImage + afterImage).trim();
+                
+                const contentSpan = document.createElement('span');
+                contentSpan.style.display = 'inline-flex';
+                contentSpan.style.alignItems = 'center';
+                contentSpan.style.flexWrap = 'wrap';
+                contentSpan.style.gap = '4px';
+
+                if (fullText) {
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = fullText;
+                    contentSpan.appendChild(textSpan);
+                }
+                
+                const button = document.createElement('button');
+                button.className = 'image-button';
+                button.textContent = `📷 ${imageMatch[1]}${imageMatch[2]}`;
+                button.onclick = () => openImageModal(imageMatch[1], imageMatch[2]);
+                
+                contentSpan.appendChild(button);
+                div.appendChild(contentSpan);
+            } else {
+                const textSpan = document.createElement('span');
+                textSpan.textContent = clue.text;
+                div.appendChild(textSpan);
+            }
+            
+            return div;
+        }
+
+        function openImageModal(imageNum, direction) {
+            const modal = document.getElementById('image-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalImage = document.getElementById('modal-image');
+            
+            const directionText = direction === 'A' ? 'Across' : 'Down';
+            modalTitle.textContent = `${imageNum} ${directionText}`;
+            modalImage.src = `img_${imageNum}${direction}.jpg`;
+            modalImage.alt = `Clue Image ${imageNum}${direction}`;
+            
+            modalImage.onerror = function() {
+                this.onerror = null;
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="600" height="400"%3E%3Crect fill="%23f0f0f0" width="600" height="400"/%3E%3Ctext x="50%25" y="45%25" text-anchor="middle" fill="%23999" font-size="24" font-family="sans-serif"%3EImage ' + imageNum + direction + ' not found%3C/text%3E%3Ctext x="50%25" y="55%25" text-anchor="middle" fill="%23666" font-size="16" font-family="sans-serif"%3EPlace img_' + imageNum + direction + '.jpg in the same directory%3C/text%3E%3C/svg%3E';
+            };
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.remove('active');
+        }
+        
+        function saveProgress() {
+            const progress = [];
+            for (let row = 0; row < GRID_SIZE; row++) {
+                progress[row] = [];
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    progress[row][col] = grid[row][col].value;
+                }
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+        
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                console.error('Error loading saved progress:', e);
+                return null;
+            }
+        }
+        
+        function clearProgress() {
+            if (confirm('Are you sure you want to clear all progress?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('image-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        initGrid();
+        renderClues();
+    </script>
+</body>
+</html>
