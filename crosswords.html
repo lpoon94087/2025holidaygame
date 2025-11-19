@@ -984,7 +984,8 @@
             const perfectScoreAchieved = localStorage.getItem(PERFECT_SCORE_KEY) === 'true';
             if (perfectScoreAchieved) {
                 showChristmasSuccess();
-                window.open("QRCODE_BONUS.webp", "_blank");
+                window.open("QRCODE_BONUS.webp", "_blank");                
+                postToNotificationForm(playerName, 1, `Found the bonus crosswords`);
                 return;
             }
             triggerEE();
