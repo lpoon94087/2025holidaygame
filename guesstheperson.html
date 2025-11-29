@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Person Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .game-container {
+            width: 90vw;
+            height: 90vh;
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+        }
+        .grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 0;
+            padding: 0;
+            background-color: #333;
+            border-radius: 20px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+        .card {
+            position: relative;
+            cursor: pointer;
+            perspective: 1000px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .card-front span {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+        }
+        .card-back {
+            background: white;
+            transform: rotateY(180deg);
+            overflow: hidden;
+        }
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card.matched {
+            background: transparent;
+            border: none;
+        }
+        
+        .card.matched .card-inner {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+        .reset-btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .image-input {
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            width: 100px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Guess the Person Game</h1>
+        <p id="imageDisplay">Puzzle: 1</p>
+    </div>
+    <div class="game-container">
+        <div class="grid" id="gameGrid"></div>
+    </div>
+    <div class="controls">
+        <button class="reset-btn" id="resetButton">Reset</button>
+        <button class="reset-btn" id="revealButton">Reveal</button>
+        <button class="reset-btn" id="prevButton"> ← </button>
+        <input type="number" id="imageInput" min="1" max="100" value="1" class="image-input" placeholder="Image #">
+        <button class="reset-btn" id="nextButton"> → </button>
+    </div>
+    <script src="boredapes.js"></script>
+    <script>
+        var gameState = {
+            cards: [],
+            flipped: [],
+            matched: [],
+            disabled: false,
+            imageNumber: 1
+        };
+
+        function getCardImages() {
+            return getBoredApeUniqueUrls(8);
+/*             return [
+                'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400&h=400&fit=crop',
+                'https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=400&h=400&fit=crop'
+            ];
+ */        }
+
+        function getBackgroundImages() {
+            var images = [];
+            images.push("https://tinyurl.com/29ptc8u2");
+            images.push("https://tinyurl.com/mume3uvr");
+            images.push("https://tinyurl.com/3w8y52c5");
+            images.push("https://tinyurl.com/tjzxhx38");
+            images.push("https://tinyurl.com/59fpkp67");
+            images.push("https://tinyurl.com/4nskthtz");
+            images.push("https://tinyurl.com/3t8a6mw6");
+            images.push("https://tinyurl.com/5a7n95t4");
+            images.push("https://tinyurl.com/5edtwdx6");
+            images.push("https://tinyurl.com/4zwn6fwd");
+
+            images.push("https://tinyurl.com/p6v9x4wh");
+            images.push("https://tinyurl.com/fn8sxej3");
+            images.push("https://tinyurl.com/42htw72n");
+            images.push("https://tinyurl.com/yhyjsn9a");
+            images.push("https://tinyurl.com/3pvhwj25");
+            images.push("https://tinyurl.com/2sdzy7w5");
+            images.push("https://tinyurl.com/4ufs69v3");
+            images.push("https://tinyurl.com/94k3y9sb");
+            images.push("https://tinyurl.com/5d5vyvr8");
+            images.push("https://tinyurl.com/45sbscxp");
+
+            return images;
+        }
+
+        function shuffleArray(arr) {
+            var array = arr.slice();
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+            return array;
+        }
+
+        function initGame() {
+            var grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            
+            var backgrounds = getBackgroundImages();
+            var bg = backgrounds[gameState.imageNumber - 1];
+            grid.style.backgroundImage = 'url(' + bg + ')';
+            
+            var images = getCardImages();
+            var pairs = [];
+            for (var i = 0; i < 8; i++) {
+                pairs.push({img: images[i], id: i});
+                pairs.push({img: images[i], id: i});
+            }
+            
+            gameState.cards = shuffleArray(pairs);
+            gameState.flipped = [];
+            gameState.matched = [];
+            gameState.disabled = false;
+
+            for (var i = 0; i < gameState.cards.length; i++) {
+                var card = document.createElement('div');
+                card.className = 'card';
+                card.setAttribute('data-idx', i);
+                
+                var inner = document.createElement('div');
+                inner.className = 'card-inner';
+                
+                var front = document.createElement('div');
+                front.className = 'card-front';
+                var num = document.createElement('span');
+                num.textContent = i + 1;
+                front.appendChild(num);
+                
+                var back = document.createElement('div');
+                back.className = 'card-back';
+                var img = document.createElement('img');
+                img.src = gameState.cards[i].img;
+                img.alt = 'card';
+                back.appendChild(img);
+                
+                inner.appendChild(front);
+                inner.appendChild(back);
+                card.appendChild(inner);
+                grid.appendChild(card);
+            }
+
+            var allCards = document.querySelectorAll('.card');
+            for (var i = 0; i < allCards.length; i++) {
+                allCards[i].addEventListener('click', cardClicked);
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            var displayElement = document.getElementById('imageDisplay');
+            var inputElement = document.getElementById('imageInput');
+            if (displayElement) {
+                displayElement.textContent = 'Puzzle: ' + gameState.imageNumber;
+            }
+            if (inputElement) {
+                inputElement.value = gameState.imageNumber;
+            }
+        }
+
+        function cardClicked(e) {
+            var card = e.currentTarget;
+            var idx = parseInt(card.getAttribute('data-idx'));
+            
+            if (gameState.disabled) return;
+            if (gameState.flipped.indexOf(idx) > -1) return;
+            if (gameState.matched.indexOf(idx) > -1) return;
+            if (gameState.flipped.length >= 2) return;
+
+            card.classList.add('flipped');
+            gameState.flipped.push(idx);
+
+            if (gameState.flipped.length === 2) {
+                gameState.disabled = true;
+                var first = gameState.flipped[0];
+                var second = gameState.flipped[1];
+                var allCards = document.querySelectorAll('.card');
+
+                if (gameState.cards[first].id === gameState.cards[second].id) {
+                    setTimeout(function() {
+                        allCards[first].classList.add('matched');
+                        allCards[second].classList.add('matched');
+                        gameState.matched.push(first);
+                        gameState.matched.push(second);
+                        gameState.flipped = [];
+                        gameState.disabled = false;
+                    }, 600);
+                } else {
+                    setTimeout(function() {
+                        allCards[first].classList.remove('flipped');
+                        allCards[second].classList.remove('flipped');
+                        gameState.flipped = [];
+                        gameState.disabled = false;
+                    }, 1500);
+                }
+            }
+        }
+
+        function changeImage(newImageNumber) {
+            if (newImageNumber >= 1 && newImageNumber <= 100) {
+                gameState.imageNumber = newImageNumber;
+                initGame();
+            }
+        }
+
+        function revealBackground() {
+            var allCards = document.querySelectorAll('.card');
+            for (var i = 0; i < allCards.length; i++) {
+                allCards[i].classList.add('matched');
+            }
+            gameState.disabled = true;
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        document.getElementById('resetButton').addEventListener('click', resetGame);
+        
+        document.getElementById('revealButton').addEventListener('click', revealBackground);
+        
+        document.getElementById('prevButton').addEventListener('click', function() {
+            changeImage(gameState.imageNumber - 1);
+        });
+        
+        document.getElementById('nextButton').addEventListener('click', function() {
+            changeImage(gameState.imageNumber + 1);
+        });
+        
+        document.getElementById('imageInput').addEventListener('change', function() {
+            var num = parseInt(this.value);
+            if (!isNaN(num)) {
+                changeImage(num);
+            }
+        });
+        
+        initGame();
+    </script>
+</body>
+</html>
