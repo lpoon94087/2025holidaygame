@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Person Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .game-container {
+            width: 90vw;
+            height: 90vh;
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+        }
+        .grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 0;
+            padding: 0;
+            background-color: #333;
+            border-radius: 20px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+        .card {
+            position: relative;
+            cursor: pointer;
+            perspective: 1000px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: white;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .card-front span {
+            font-size: 3rem;
+            font-weight: bold;
+            color: white;
+        }
+        .card-back {
+            background: white;
+            transform: rotateY(180deg);
+            overflow: hidden;
+        }
+        .card-back img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card.matched {
+            background: transparent;
+            border: none;
+        }
+        
+        .card.matched .card-inner {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .reset-btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .reset-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .image-input {
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            width: 100px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .loading {
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            z-index: 1;
+            margin-bottom: 5px;
+        }
+        .dropdown-content button {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background-color: white;
+            color: #667eea;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 0;
+        }
+        .dropdown-content button:first-child {
+            border-radius: 10px 10px 0 0;
+        }
+        .dropdown-content button:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+        .dropdown-content button:hover {
+            background-color: #f0f0f0;
+        }
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Guess the Celebrity Game</h1>
+        <p id="imageDisplay">Loading...</p>
+        <p class="loading" id="loadingMessage"></p>
+    </div>
+    <div class="game-container">
+        <div class="grid" id="gameGrid"></div>
+    </div>
+    <div class="controls">
+        <button class="reset-btn" id="resetButton">Reset</button>
+        <button class="reset-btn" id="rollcallButton">Rollcall</button>
+        <button class="reset-btn" id="revealButton">Reveal</button>
+        <button class="reset-btn" id="prevButton">←</button>
+        <input type="number" id="imageInput" min="1" max="100" value="1" class="image-input" placeholder="Image #">
+        <button class="reset-btn" id="nextButton">→</button>
+        <button class="reset-btn" id="randomButton">?</button>
+        
+        <div class="dropdown" id="cardsDropdown">
+            <button class="reset-btn" id="cardsButton">Cards</button>
+            <div class="dropdown-content">
+                <button data-card-set="1">Set 1</button>
+                <button data-card-set="2">Set 2</button>
+            </div>
+        </div>
+        
+        <div class="dropdown" id="peopleDropdown">
+            <button class="reset-btn" id="peopleButton">People</button>
+            <div class="dropdown-content">
+                <button data-people-set="1">People</button>
+                <button data-people-set="2">Cartoon</button>
+            </div>
+        </div>
+        
+        <label style="color: white; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+            <input type="checkbox" id="faceCropCheckbox" checked style="cursor: pointer;">
+            <span>Face Crop</span>
+        </label>
+    </div>
+
+    <script src="boredapes.js"></script>
+    <script src="wikimedia_people.js"></script>
+    <script src="cartoon.js"></script>
+    <script type="module">
+        import {
+            FilesetResolver,
+            FaceDetector
+        } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.15/vision_bundle.mjs";
+
+        const wikimediaPeopleAdults = wikimediaPeople;
+        const wikimediaPeopleKids = famousCartoon;
+
+        let wikimediaPeopleSet = wikimediaPeopleAdults;
+        let faceDetector = null;
+        let visionRuntime = null;
+
+        async function initMediaPipe() {
+            if (!visionRuntime) {
+                visionRuntime = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.15/wasm"
+                );
+            }
+            if (!faceDetector) {
+                faceDetector = await FaceDetector.createFromOptions(visionRuntime, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+                    },
+                    runningMode: "IMAGE"
+                });
+            }
+        }
+
+        async function fetchBackgroundImage(imageNumber) {
+            if (gameState.peopleSet === 1) {
+                // Set 1
+                const name = wikimediaPeopleSet[imageNumber];
+
+                const endpoint = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=800&origin=*`;
+                
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                const pages = data.query.pages;
+                const page = Object.values(pages)[0];
+
+                if (page.thumbnail && page.thumbnail.source) {
+                    return page.thumbnail.source;
+                } else {
+                    throw new Error('No image found for this celebrity');
+                }
+            } else {
+                // Set 2
+                return famousCartoonURL[imageNumber];
+            }
+        }
+
+       async function cropFaceFromImage(imageUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = imageUrl;
+
+                img.onload = async () => {
+                    try {
+                        const result = faceDetector.detect(img);
+
+                        if (!result.detections || result.detections.length === 0) {
+                            console.log('No face detected, using original image');
+                            resolve(imageUrl);
+                            return;
+                        }
+
+                        const box = result.detections[0].boundingBox;
+                        const ZOOM_OUT = 1.4;
+
+                        let cx = box.originX + box.width / 2;
+                        let cy = box.originY + box.height / 2;
+                        let w = box.width * ZOOM_OUT;
+                        let h = box.height * ZOOM_OUT;
+
+                        let x = cx - w / 2;
+                        let y = cy - h / 2;
+
+                        x = Math.max(0, x);
+                        y = Math.max(0, y);
+                        w = Math.min(img.width - x, w);
+                        h = Math.min(img.height - y, h);
+
+                        const canvas = document.createElement("canvas");
+                        canvas.width = w;
+                        canvas.height = h;
+
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
+
+                        resolve(canvas.toDataURL("image/jpeg"));
+                    } catch (error) {
+                        console.error('Error cropping face:', error);
+                        resolve(imageUrl);
+                    }
+                };
+
+                img.onerror = (error) => {
+                    console.error('Failed to load image for face detection:', error);
+                    resolve(imageUrl);
+                };
+            });
+        }
+
+        var gameState = {
+            cards: [],
+            flipped: [],
+            matched: [],
+            disabled: false,
+            imageNumber: 1,
+            currentBackground: null,
+            currentCelebrityName: '',
+            cardSet: 1,
+            peopleSet: 1,
+            useFaceCrop: true
+        };
+
+        function getCardImages() {
+            if (gameState.cardSet === 1) {
+                return getBoredApeUniqueUrls(8);
+            } else {
+                return [
+                    'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1425082661705-1834bfd09dca?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1501706362039-c06b2d715385?w=400&h=400&fit=crop'
+                ];
+            }
+        }
+
+        async function loadBackgroundImage() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            const displayElement = document.getElementById('imageDisplay');
+            
+            wikimediaPeopleSet = gameState.peopleSet === 1 ? wikimediaPeopleAdults : wikimediaPeopleKids;
+            
+            try {
+                const name = wikimediaPeopleSet[gameState.imageNumber - 1];
+                if (!name) {
+                    throw new Error('Invalid celebrity index');
+                }
+
+                loadingMessage.textContent = `Loading background image ...`;
+                displayElement.textContent = 'Loading...';
+
+                await initMediaPipe();
+
+                const imageUrl = await fetchBackgroundImage(gameState.imageNumber - 1);
+
+                let finalImage;
+                if (gameState.useFaceCrop) {
+                    loadingMessage.textContent = 'Cropping face...';
+                    finalImage = await cropFaceFromImage(imageUrl);
+                } else {
+                    finalImage = imageUrl;
+                }
+
+                gameState.currentBackground = finalImage;
+                gameState.currentCelebrityName = name;
+                loadingMessage.textContent = '';
+                displayElement.textContent = `Puzzle ${gameState.imageNumber}`;
+
+                return finalImage;
+
+            } catch (error) {
+                console.error('Error loading celebrity:', error.message);
+                loadingMessage.textContent = `Error: ${error.message}`;
+                displayElement.textContent = `Puzzle ${gameState.imageNumber}: Error`;
+                
+                return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800"><rect width="800" height="800" fill="%23333"/><text x="400" y="400" text-anchor="middle" fill="white" font-size="30">Image not found</text></svg>';
+            }
+        }
+
+        function shuffleArray(arr) {
+            var array = arr.slice();
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+            return array;
+        }
+
+        async function initGame() {
+            var grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            
+            grid.style.backgroundImage = 'none';
+            
+            const bg = await loadBackgroundImage();
+            
+            var images = getCardImages();
+            var pairs = [];
+            for (var i = 0; i < 8; i++) {
+                pairs.push({img: images[i], id: i});
+                pairs.push({img: images[i], id: i});
+            }
+            
+            gameState.cards = shuffleArray(pairs);
+            gameState.flipped = [];
+            gameState.matched = [];
+            gameState.disabled = false;
+
+            for (var i = 0; i < gameState.cards.length; i++) {
+                var card = document.createElement('div');
+                card.className = 'card';
+                card.setAttribute('data-idx', i);
+                
+                var inner = document.createElement('div');
+                inner.className = 'card-inner';
+                
+                var front = document.createElement('div');
+                front.className = 'card-front';
+                var num = document.createElement('span');
+                num.textContent = i + 1;
+                front.appendChild(num);
+                
+                var back = document.createElement('div');
+                back.className = 'card-back';
+                var img = document.createElement('img');
+                img.src = gameState.cards[i].img;
+                img.alt = 'card';
+                back.appendChild(img);
+                
+                inner.appendChild(front);
+                inner.appendChild(back);
+                card.appendChild(inner);
+                grid.appendChild(card);
+            }
+
+            var allCards = document.querySelectorAll('.card');
+            for (var i = 0; i < allCards.length; i++) {
+                allCards[i].addEventListener('click', cardClicked);
+            }
+
+            updateDisplay();
+            
+            grid.style.backgroundImage = 'url(' + bg + ')';
+        }
+
+        function updateDisplay() {
+            var inputElement = document.getElementById('imageInput');
+            if (inputElement) {
+                inputElement.value = gameState.imageNumber;
+            }
+        }
+
+        function cardClicked(e) {
+            var card = e.currentTarget;
+            var idx = parseInt(card.getAttribute('data-idx'));
+            
+            if (gameState.disabled) return;
+            if (gameState.flipped.indexOf(idx) > -1) return;
+            if (gameState.matched.indexOf(idx) > -1) return;
+            if (gameState.flipped.length >= 2) return;
+
+            card.classList.add('flipped');
+            gameState.flipped.push(idx);
+
+            if (gameState.flipped.length === 2) {
+                gameState.disabled = true;
+                var first = gameState.flipped[0];
+                var second = gameState.flipped[1];
+                var allCards = document.querySelectorAll('.card');
+
+                if (gameState.cards[first].id === gameState.cards[second].id) {
+                    setTimeout(function() {
+                        allCards[first].classList.add('matched');
+                        allCards[second].classList.add('matched');
+                        gameState.matched.push(first);
+                        gameState.matched.push(second);
+                        gameState.flipped = [];
+                        gameState.disabled = false;
+                    }, 600);
+                } else {
+                    setTimeout(function() {
+                        allCards[first].classList.remove('flipped');
+                        allCards[second].classList.remove('flipped');
+                        gameState.flipped = [];
+                        gameState.disabled = false;
+                    }, 1500);
+                }
+            }
+        }
+
+        function changeImage(newImageNumber) {
+            const maxImages = gameState.peopleSet === 1 ? wikimediaPeopleAdults.length : wikimediaPeopleKids.length;
+            if (newImageNumber >= 1 && newImageNumber <= maxImages) {
+                gameState.imageNumber = newImageNumber;
+                initGame();
+            }
+        }
+
+        function randomImage() {
+            const maxImages = gameState.peopleSet === 1 ? wikimediaPeopleAdults.length : wikimediaPeopleKids.length;
+            const randomNum = Math.floor(Math.random() * maxImages) + 1;
+            changeImage(randomNum);
+        }
+
+        function revealBackground() {
+            var allCards = document.querySelectorAll('.card');
+            for (var i = 0; i < allCards.length; i++) {
+                allCards[i].classList.add('matched');
+            }
+            gameState.disabled = true;
+            
+            var displayElement = document.getElementById('imageDisplay');
+            if (displayElement && gameState.currentCelebrityName) {
+                displayElement.textContent = `Puzzle ${gameState.imageNumber}: ${gameState.currentCelebrityName}`;
+            }
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        async function rollcall() {
+            if (gameState.disabled) return;
+            
+            gameState.disabled = true;
+            var allCards = document.querySelectorAll('.card');
+            
+            var indices = [];
+            for (var i = 0; i < allCards.length; i++) {
+                indices.push(i);
+            }
+            indices = shuffleArray(indices);
+            
+            for (var i = 0; i < indices.length; i++) {
+                var idx = indices[i];
+                var card = allCards[idx];
+                
+                card.classList.add('flipped');
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                card.classList.remove('flipped');
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            gameState.disabled = false;
+        }
+
+        document.getElementById('resetButton').addEventListener('click', resetGame);
+        document.getElementById('rollcallButton').addEventListener('click', rollcall);
+        document.getElementById('revealButton').addEventListener('click', revealBackground);
+        
+        document.getElementById('randomButton').addEventListener('click', randomImage);
+        
+        document.getElementById('prevButton').addEventListener('click', function() {
+            changeImage(gameState.imageNumber - 1);
+        });
+        
+        document.getElementById('nextButton').addEventListener('click', function() {
+            changeImage(gameState.imageNumber + 1);
+        });
+        
+        document.getElementById('imageInput').addEventListener('change', function() {
+            var num = parseInt(this.value);
+            if (!isNaN(num)) {
+                changeImage(num);
+            }
+        });
+        
+        document.getElementById('cardsButton').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('cardsDropdown').classList.toggle('active');
+            document.getElementById('peopleDropdown').classList.remove('active');
+        });
+        
+        document.getElementById('peopleButton').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('peopleDropdown').classList.toggle('active');
+            document.getElementById('cardsDropdown').classList.remove('active');
+        });
+        
+        document.addEventListener('click', function() {
+            document.getElementById('cardsDropdown').classList.remove('active');
+            document.getElementById('peopleDropdown').classList.remove('active');
+        });
+        
+        document.querySelectorAll('[data-card-set]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                gameState.cardSet = parseInt(this.getAttribute('data-card-set'));
+                document.getElementById('cardsDropdown').classList.remove('active');
+                initGame();
+            });
+        });
+        
+        document.querySelectorAll('[data-people-set]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                gameState.peopleSet = parseInt(this.getAttribute('data-people-set'));
+                gameState.imageNumber = 1;
+                document.getElementById('peopleDropdown').classList.remove('active');
+                initGame();
+            });
+        });
+        
+        document.getElementById('faceCropCheckbox').addEventListener('change', function() {
+            gameState.useFaceCrop = this.checked;
+            initGame();
+        });
+        
+        initMediaPipe().then(() => {
+            initGame();
+        });
+    </script>
+</body>
+</html>
