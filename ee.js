@@ -34,14 +34,9 @@
     var urls = _0x2b.map(_0x9f);
 
     var r = Math.random();
-    if (r < 0.95) {
-      var m = msgs[Math.floor(Math.random() * msgs.length)];
-      alert(m);
-    } else {
-      var u = urls[Math.floor(Math.random() * urls.length)];
-      window.open(u, "_blank");
-      postToNotificationForm(playerName, 1, "Found an easter egg " + u);
-    }
+    var u = urls[Math.floor(Math.random() * urls.length)];
+    window.open(u, "_blank");
+    postToNotificationForm(playerName, 1, "Found an easter egg " + u);
   };
 })();
 
